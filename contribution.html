@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Proposer un projet — Observatoire de l'innovation PACA</title>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172036;
+      --muted: #667085;
+      --line: #dce3ec;
+      --surface: #ffffff;
+      --surface-soft: #f6f8fb;
+      --accent: #0b6bcb;
+      --accent-dark: #0758aa;
+      --accent-soft: #eaf3ff;
+      --danger: #b42318;
+      --ok: #067647;
+      --shadow: 0 12px 32px rgba(23, 32, 54, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #f3f6fa;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body { padding: 16px; }
+
+    .shell {
+      width: min(100%, 980px);
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header {
+      display: grid;
+      gap: 16px;
+      padding: 24px 26px 20px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, #ffffff 0%, #f6faff 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .intro {
+      margin: 7px 0 0;
+      max-width: 72ch;
+      color: #475467;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .progress {
+      display: grid;
+      gap: 8px;
+    }
+
+    .progress__label {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .bar {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e4eaf2;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: var(--value, 0%);
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width 180ms ease;
+    }
+
+    .content {
+      display: grid;
+      gap: 20px;
+      padding: 24px 26px 26px;
+    }
+
+    .step-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .section-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    label {
+      color: #344054;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid #cfd8e5;
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    input { min-height: 42px; padding: 9px 11px; }
+    textarea { min-height: 210px; padding: 12px; resize: vertical; line-height: 1.55; }
+
+    input:focus, textarea:focus {
+      border-color: #84bdf5;
+      box-shadow: 0 0 0 3px #d7ebff;
+    }
+
+    .markdown-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+
+    .tool-button {
+      min-height: 31px;
+      padding: 5px 9px;
+      border: 1px solid #c8dcf5;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: #174e86;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .preview {
+      padding: 13px 14px;
+      border: 1px dashed #c8dcf5;
+      border-radius: 10px;
+      background: #fbfdff;
+      color: #344054;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .preview h2, .preview h3 { margin: 0.45em 0; }
+    .preview p { margin: 0.45em 0; }
+    .preview ul { padding-left: 1.3em; }
+
+    .drop {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border: 1px dashed #adc7e8;
+      border-radius: 12px;
+      background: #fbfdff;
+    }
+
+    .drop input {
+      min-height: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .file-name {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .notice {
+      padding: 15px;
+      border: 1px solid #c8dcf5;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: #174e86;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      padding: 15px;
+      border-radius: 12px;
+      background: var(--surface-soft);
+      color: #344054;
+      font-size: 14px;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 12px;
+      border-bottom: 1px solid #e5ebf3;
+      padding-bottom: 9px;
+    }
+
+    .summary-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .summary-row strong { color: var(--ink); }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status--error { color: var(--danger); }
+    .status--ok { color: var(--ok); }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button, .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .primary { background: var(--accent); color: white; }
+    .primary:hover { background: var(--accent-dark); }
+    .secondary { background: white; border-color: #cfd8e5; color: #344054; }
+    .secondary:hover { background: #f8fafc; }
+    .ghost { background: transparent; color: var(--muted); }
+    button:disabled { opacity: 0.48; cursor: not-allowed; }
+    button:focus-visible, .link-button:focus-visible { outline: 3px solid #9ecbff; outline-offset: 2px; }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 680px) {
+      body { padding: 0; }
+      .shell { border: 0; border-radius: 0; box-shadow: none; }
+      header, .content { padding-left: 18px; padding-right: 18px; }
+      .grid, .summary-row { grid-template-columns: 1fr; }
+      .actions { align-items: stretch; }
+      .button-group, button, .link-button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">Observatoire de l'innovation PACA</p>
+        <h1>Proposer un projet</h1>
+        <p class="intro">Les informations sont conservées dans ce navigateur pendant la saisie. Elles ne sont envoyées dans Grist qu'à la dernière étape, quand l'utilisateur dispose des droits nécessaires.</p>
+      </div>
+      <div class="progress" aria-live="polite">
+        <div class="progress__label">
+          <span id="progressText">Étape 1 sur 13</span>
+          <span id="progressPercent">8%</span>
+        </div>
+        <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <div>
+        <p class="section-label" id="sectionLabel"></p>
+        <h2 class="step-title" id="stepTitle"></h2>
+      </div>
+      <form id="form" novalidate></form>
+      <div id="status" class="status"></div>
+      <div class="actions">
+        <button type="button" class="secondary" id="backButton">Précédent</button>
+        <div class="button-group">
+          <button type="button" class="ghost" id="clearButton">Effacer le brouillon</button>
+          <a class="link-button secondary" id="authLink" href="https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation" target="_blank" rel="noopener noreferrer" hidden>Ouvrir l'espace connecté</a>
+          <button type="button" class="primary" id="nextButton">Suivant</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'observatoire-innovation-contribution-draft-v1';
+    const CONNECTED_URL = 'https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation';
+    const steps = [
+      { section: 'Coordonnées', title: 'Personne qui propose le projet', type: 'fields', fields: [
+        { key: 'proposant_nom', label: 'Nom', type: 'text' },
+        { key: 'proposant_prenom', label: 'Prénom', type: 'text' },
+        { key: 'proposant_structure', label: 'Nom de la structure', type: 'text' },
+        { key: 'proposant_fonction', label: 'Fonction', type: 'text' },
+        { key: 'proposant_email', label: 'E mail', type: 'email' },
+        { key: 'proposant_telephone', label: 'Téléphone', type: 'tel' }
+      ] },
+      { section: 'Contact', title: "Maître d'ouvrage", type: 'fields', fields: [
+        { key: 'moa_structure', label: 'Nom de la structure', type: 'text' },
+        { key: 'moa_nom', label: 'Nom', type: 'text' },
+        { key: 'moa_prenom', label: 'Prénom', type: 'text' },
+        { key: 'moa_fonction', label: 'Fonction', type: 'text' },
+        { key: 'moa_email', label: 'E mail', type: 'email' },
+        { key: 'moa_telephone', label: 'Téléphone', type: 'tel' }
+      ] },
+      { section: 'Contact', title: "Maître d'œuvre", type: 'fields', fields: [
+        { key: 'moe_structure', label: "Nom du Maître d'œuvre", type: 'text' },
+        { key: 'moe_nom', label: 'Nom', type: 'text' },
+        { key: 'moe_prenom', label: 'Prénom', type: 'text' },
+        { key: 'moe_fonction', label: 'Fonction', type: 'text' },
+        { key: 'moe_email', label: 'E mail', type: 'email' },
+        { key: 'moe_telephone', label: 'Téléphone', type: 'tel' }
+      ] },
+      { section: 'Contact', title: 'Entreprise', type: 'fields', fields: [
+        { key: 'entreprise_structure', label: "Nom de l'entreprise", type: 'text' },
+        { key: 'entreprise_nom', label: 'Nom', type: 'text' },
+        { key: 'entreprise_prenom', label: 'Prénom', type: 'text' },
+        { key: 'entreprise_fonction', label: 'Fonction', type: 'text' },
+        { key: 'entreprise_email', label: 'E mail', type: 'email' },
+        { key: 'entreprise_telephone', label: 'Téléphone', type: 'tel' }
+      ] },
+      { section: 'Projet', title: "Nom de l'opération", type: 'fields', fields: [
+        { key: 'nom_operation', label: "Nom de l'opération", type: 'text' }
+      ] },
+      { section: 'Projet', title: 'Description du projet', type: 'markdown', key: 'description', label: 'Description du projet' },
+      { section: 'Projet', title: 'Caractéristiques techniques du projet', type: 'markdown', key: 'caracteristiques_techniques', label: 'Caractéristiques techniques du projet' },
+      { section: 'Projet', title: 'Caractère innovant du projet', type: 'fields', fields: [
+        { key: 'caractere_innovant', label: 'Caractère innovant du projet', type: 'text' }
+      ] },
+      { section: 'Projet', title: 'Localisation du projet', type: 'fields', fields: [
+        { key: 'localisation', label: 'Localisation du projet', type: 'text' }
+      ] },
+      { section: 'Projet', title: 'Coordonnées géographiques', type: 'fields', fields: [
+        { key: 'latitude', label: 'Latitude', type: 'number', step: 'any' },
+        { key: 'longitude', label: 'Longitude', type: 'number', step: 'any' }
+      ] },
+      { section: 'Pièces jointes', title: 'Documentation technique', type: 'file', key: 'documentation_technique', label: 'Documentation technique', accept: '.pdf,.doc,.docx,.odt,.xls,.xlsx,.csv,.zip,image/*' },
+      { section: 'Pièces jointes', title: 'Illustrations du projet', type: 'file', key: 'illustration_projet', label: 'Illustration du projet', accept: 'image/*' },
+      { section: 'Validation', title: 'Vérifier et envoyer', type: 'review' }
+    ];
+    const gristColumns = [
+      { name: 'proposant_nom', title: 'Proposant - nom', optional: true },
+      { name: 'proposant_prenom', title: 'Proposant - prénom', optional: true },
+      { name: 'proposant_structure', title: 'Proposant - structure', optional: true },
+      { name: 'proposant_fonction', title: 'Proposant - fonction', optional: true },
+      { name: 'proposant_email', title: 'Proposant - email', optional: true },
+      { name: 'proposant_telephone', title: 'Proposant - téléphone', optional: true },
+      { name: 'moa_structure', title: "Maître d'ouvrage - structure", optional: true },
+      { name: 'moa_nom', title: "Maître d'ouvrage - nom", optional: true },
+      { name: 'moa_prenom', title: "Maître d'ouvrage - prénom", optional: true },
+      { name: 'moa_fonction', title: "Maître d'ouvrage - fonction", optional: true },
+      { name: 'moa_email', title: "Maître d'ouvrage - email", optional: true },
+      { name: 'moa_telephone', title: "Maître d'ouvrage - téléphone", optional: true },
+      { name: 'moe_structure', title: "Maître d'œuvre - structure", optional: true },
+      { name: 'moe_nom', title: "Maître d'œuvre - nom", optional: true },
+      { name: 'moe_prenom', title: "Maître d'œuvre - prénom", optional: true },
+      { name: 'moe_fonction', title: "Maître d'œuvre - fonction", optional: true },
+      { name: 'moe_email', title: "Maître d'œuvre - email", optional: true },
+      { name: 'moe_telephone', title: "Maître d'œuvre - téléphone", optional: true },
+      { name: 'entreprise_structure', title: 'Entreprise - structure', optional: true },
+      { name: 'entreprise_nom', title: 'Entreprise - nom', optional: true },
+      { name: 'entreprise_prenom', title: 'Entreprise - prénom', optional: true },
+      { name: 'entreprise_fonction', title: 'Entreprise - fonction', optional: true },
+      { name: 'entreprise_email', title: 'Entreprise - email', optional: true },
+      { name: 'entreprise_telephone', title: 'Entreprise - téléphone', optional: true },
+      { name: 'nom_operation', title: "Nom de l'opération", optional: true },
+      { name: 'description', title: 'Description', optional: true },
+      { name: 'caracteristiques_techniques', title: 'Caractéristiques techniques', optional: true },
+      { name: 'caractere_innovant', title: 'Caractère innovant', optional: true },
+      { name: 'localisation', title: 'Localisation', optional: true },
+      { name: 'latitude', title: 'Latitude', optional: true },
+      { name: 'longitude', title: 'Longitude', optional: true },
+      { name: 'documentation_technique', title: 'Documentation technique', type: 'Attachments', optional: true },
+      { name: 'illustration_projet', title: 'Illustration du projet', type: 'Attachments', optional: true },
+      { name: 'statut_contribution', title: 'Statut de la contribution', optional: true },
+      { name: 'date_soumission', title: 'Date de soumission', optional: true }
+    ];
+
+    let currentStep = 0;
+    let draft = readDraft();
+    let fileDraft = {};
+    let interactionInfo = {};
+
+    const form = document.getElementById('form');
+    const status = document.getElementById('status');
+    const authLink = document.getElementById('authLink');
+    const backButton = document.getElementById('backButton');
+    const nextButton = document.getElementById('nextButton');
+    const clearButton = document.getElementById('clearButton');
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function readDraft() {
+      try {
+        return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveDraft() {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    }
+
+    function setStatus(message, kind) {
+      status.textContent = message || '';
+      status.className = 'status' + (kind ? ' status--' + kind : '');
+    }
+
+    function markdownToHtml(value) {
+      let html = escapeHtml(value || '');
+      html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      html = html.replace(/^- (.*)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+      return html.split(/\n{2,}/).map(function(part) {
+        return /^<h|^<ul/.test(part) ? part : '<p>' + part.replace(/\n/g, '<br>') + '</p>';
+      }).join('');
+    }
+
+    function storeInputs() {
+      form.querySelectorAll('input[data-key], textarea[data-key]').forEach(function(input) {
+        if (input.type === 'file') return;
+        draft[input.dataset.key] = input.value;
+      });
+      saveDraft();
+    }
+
+    function inputMarkup(field) {
+      const stepAttr = field.step ? ' step="' + escapeHtml(field.step) + '"' : '';
+      return '<div class="field"><label for="' + field.key + '">' + escapeHtml(field.label) + '</label><input id="' + field.key + '" data-key="' + field.key + '" type="' + escapeHtml(field.type || 'text') + '"' + stepAttr + ' value="' + escapeHtml(draft[field.key] || '') + '" /></div>';
+    }
+
+    function renderFields(step) {
+      form.innerHTML = '<div class="grid">' + step.fields.map(inputMarkup).join('') + '</div>';
+    }
+
+    function applyMarkdown(key, prefix, suffix, placeholder) {
+      const input = document.querySelector('[data-key="' + key + '"]');
+      if (!input) return;
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const selected = input.value.slice(start, end) || placeholder;
+      input.value = input.value.slice(0, start) + prefix + selected + suffix + input.value.slice(end);
+      input.focus();
+      input.selectionStart = start + prefix.length;
+      input.selectionEnd = start + prefix.length + selected.length;
+      draft[key] = input.value;
+      saveDraft();
+      renderMarkdownPreview(key);
+    }
+
+    function renderMarkdownPreview(key) {
+      const preview = document.getElementById('preview-' + key);
+      if (preview) preview.innerHTML = markdownToHtml(draft[key] || '');
+    }
+
+    function renderMarkdown(step) {
+      const value = draft[step.key] || '';
+      form.innerHTML =
+        '<div class="field">' +
+          '<label for="' + step.key + '">' + escapeHtml(step.label) + '</label>' +
+          '<div class="markdown-tools">' +
+            '<button type="button" class="tool-button" data-md="bold">B</button>' +
+            '<button type="button" class="tool-button" data-md="italic">I</button>' +
+            '<button type="button" class="tool-button" data-md="h2">Titre</button>' +
+            '<button type="button" class="tool-button" data-md="list">Liste</button>' +
+          '</div>' +
+          '<textarea id="' + step.key + '" data-key="' + step.key + '">' + escapeHtml(value) + '</textarea>' +
+          '<div class="preview" id="preview-' + step.key + '">' + markdownToHtml(value) + '</div>' +
+        '</div>';
+      form.querySelector('[data-md="bold"]').addEventListener('click', function() { applyMarkdown(step.key, '**', '**', 'texte important'); });
+      form.querySelector('[data-md="italic"]').addEventListener('click', function() { applyMarkdown(step.key, '*', '*', 'texte'); });
+      form.querySelector('[data-md="h2"]').addEventListener('click', function() { applyMarkdown(step.key, '## ', '', 'Titre de section'); });
+      form.querySelector('[data-md="list"]').addEventListener('click', function() { applyMarkdown(step.key, '- ', '', 'élément de liste'); });
+      form.querySelector('textarea').addEventListener('input', function(event) {
+        draft[step.key] = event.target.value;
+        saveDraft();
+        renderMarkdownPreview(step.key);
+      });
+    }
+
+    function renderFile(step) {
+      const file = fileDraft[step.key];
+      form.innerHTML =
+        '<div class="drop">' +
+          '<label for="' + step.key + '">' + escapeHtml(step.label) + '</label>' +
+          '<input id="' + step.key + '" data-key="' + step.key + '" type="file" accept="' + escapeHtml(step.accept || '') + '" />' +
+          '<span class="file-name" id="file-' + step.key + '">' + escapeHtml(file ? file.name : 'Aucun fichier sélectionné') + '</span>' +
+        '</div>' +
+        '<p class="notice">Les fichiers restent uniquement dans cette session de navigateur jusqu'à l'envoi final. Si la page est rechargée, il faudra les sélectionner à nouveau.</p>';
+      form.querySelector('input[type="file"]').addEventListener('change', function(event) {
+        const selected = event.target.files && event.target.files[0];
+        if (selected) fileDraft[step.key] = selected;
+        document.getElementById('file-' + step.key).textContent = selected ? selected.name : 'Aucun fichier sélectionné';
+      });
+    }
+
+    function compact(value) {
+      const text = String(value || '').trim();
+      return text.length > 160 ? text.slice(0, 157) + '...' : text;
+    }
+
+    function renderReview() {
+      const rows = [
+        ['Projet', draft.nom_operation],
+        ['Proposant', [draft.proposant_prenom, draft.proposant_nom, draft.proposant_structure].filter(Boolean).join(' - ')],
+        ["Maître d'ouvrage", [draft.moa_structure, draft.moa_prenom, draft.moa_nom].filter(Boolean).join(' - ')],
+        ["Maître d'œuvre", [draft.moe_structure, draft.moe_prenom, draft.moe_nom].filter(Boolean).join(' - ')],
+        ['Entreprise', [draft.entreprise_structure, draft.entreprise_prenom, draft.entreprise_nom].filter(Boolean).join(' - ')],
+        ['Localisation', draft.localisation],
+        ['Coordonnées', [draft.latitude, draft.longitude].filter(Boolean).join(', ')],
+        ['Description', compact(draft.description)],
+        ['Caractéristiques techniques', compact(draft.caracteristiques_techniques)],
+        ['Documentation technique', fileDraft.documentation_technique ? fileDraft.documentation_technique.name : 'Aucun fichier'],
+        ['Illustration', fileDraft.illustration_projet ? fileDraft.illustration_projet.name : 'Aucun fichier']
+      ];
+      form.innerHTML =
+        '<div class="notice">Dernière étape : vérifiez la proposition. L’enregistrement dans Grist nécessite que le contributeur ait les droits adaptés. Si l’enregistrement est refusé, ouvrez l’espace connecté puis revenez envoyer la proposition.</div>' +
+        '<div class="summary">' + rows.map(function(row) {
+          return '<div class="summary-row"><strong>' + escapeHtml(row[0]) + '</strong><span>' + escapeHtml(row[1] || 'Non renseigné') + '</span></div>';
+        }).join('') + '</div>';
+    }
+
+    function render() {
+      const step = steps[currentStep];
+      document.getElementById('sectionLabel').textContent = step.section;
+      document.getElementById('stepTitle').textContent = step.title;
+      document.getElementById('progressText').textContent = 'Étape ' + (currentStep + 1) + ' sur ' + steps.length;
+      const percent = Math.round(((currentStep + 1) / steps.length) * 100);
+      document.getElementById('progressPercent').textContent = percent + '%';
+      document.getElementById('progressBar').style.setProperty('--value', percent + '%');
+      backButton.disabled = currentStep === 0;
+      authLink.hidden = currentStep !== steps.length - 1;
+      nextButton.textContent = currentStep === steps.length - 1 ? 'Envoyer dans Grist' : 'Suivant';
+      setStatus('');
+
+      if (step.type === 'fields') renderFields(step);
+      if (step.type === 'markdown') renderMarkdown(step);
+      if (step.type === 'file') renderFile(step);
+      if (step.type === 'review') renderReview();
+
+      form.querySelectorAll('input[data-key], textarea[data-key]').forEach(function(input) {
+        input.addEventListener('input', storeInputs);
+      });
+    }
+
+    async function uploadAttachment(file) {
+      if (!file) return [];
+      const tokenInfo = await grist.docApi.getAccessToken({ readOnly: false });
+      const formData = new FormData();
+      formData.append('upload', file, file.name);
+      const response = await fetch(tokenInfo.baseUrl + '/attachments?auth=' + encodeURIComponent(tokenInfo.token), {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) throw new Error('Dépôt de fichier refusé');
+      const ids = await response.json();
+      return Array.isArray(ids) ? ids : [];
+    }
+
+    function cleanFields(fields) {
+      const clean = {};
+      Object.entries(fields).forEach(function(entry) {
+        const key = entry[0];
+        const value = entry[1];
+        if (value === '' || value == null) return;
+        clean[key] = value;
+      });
+      return clean;
+    }
+
+    async function submitToGrist() {
+      storeInputs();
+      setStatus('Préparation de l’envoi...', '');
+      nextButton.disabled = true;
+      try {
+        const docIds = await uploadAttachment(fileDraft.documentation_technique);
+        const imageIds = await uploadAttachment(fileDraft.illustration_projet);
+        const fields = cleanFields(Object.assign({}, draft, {
+          statut_contribution: 'A valider',
+          date_soumission: new Date().toISOString(),
+          documentation_technique: docIds.length ? ['L'].concat(docIds) : undefined,
+          illustration_projet: imageIds.length ? ['L'].concat(imageIds) : undefined
+        }));
+        const mappedFields = grist.mapColumnNamesBack ? grist.mapColumnNamesBack(fields) : fields;
+        await grist.selectedTable.create({ fields: mappedFields });
+        sessionStorage.removeItem(STORAGE_KEY);
+        draft = {};
+        fileDraft = {};
+        setStatus('Proposition envoyée dans Grist. Elle peut maintenant être contrôlée puis publiée.', 'ok');
+      } catch (error) {
+        console.error(error);
+        authLink.hidden = false;
+        setStatus("L'envoi n'a pas été accepté par Grist. Le cas le plus probable est un accès insuffisant : ouvrez l'espace connecté, authentifiez-vous, puis revenez envoyer la proposition.", 'error');
+      } finally {
+        nextButton.disabled = false;
+      }
+    }
+
+    backButton.addEventListener('click', function() {
+      storeInputs();
+      currentStep = Math.max(0, currentStep - 1);
+      render();
+    });
+
+    nextButton.addEventListener('click', function() {
+      if (currentStep === steps.length - 1) {
+        submitToGrist();
+        return;
+      }
+      storeInputs();
+      currentStep = Math.min(steps.length - 1, currentStep + 1);
+      render();
+    });
+
+    clearButton.addEventListener('click', function() {
+      draft = {};
+      fileDraft = {};
+      sessionStorage.removeItem(STORAGE_KEY);
+      currentStep = 0;
+      render();
+      setStatus('Brouillon effacé.', 'ok');
+    });
+
+    if (window.grist) {
+      grist.ready({ requiredAccess: 'full', columns: gristColumns });
+      grist.onOptions(function(options, interaction) {
+        interactionInfo = interaction || {};
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
