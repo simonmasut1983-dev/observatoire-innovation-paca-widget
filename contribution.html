@@ -655,7 +655,7 @@
           '<input id="' + step.key + '" data-key="' + step.key + '" type="file" accept="' + escapeHtml(step.accept || '') + '" />' +
           '<span class="file-name" id="file-' + step.key + '">' + escapeHtml(file ? file.name : 'Aucun fichier sélectionné') + '</span>' +
         '</div>' +
-        '<p class="notice">Les fichiers restent uniquement dans cette session de navigateur jusqu'à l'envoi final. Si la page est rechargée, il faudra les sélectionner à nouveau.</p>';
+        '<p class="notice">Les fichiers restent uniquement dans cette session de navigateur jusqu\'à l\'envoi final. Si la page est rechargée, il faudra les sélectionner à nouveau.</p>';
       form.querySelector('input[type="file"]').addEventListener('change', function(event) {
         const selected = event.target.files && event.target.files[0];
         if (selected) fileDraft[step.key] = selected;
