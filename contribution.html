@@ -444,7 +444,8 @@
     const STORAGE_KEY = 'observatoire-innovation-contribution-draft-v1';
     const CONNECTED_URL = 'https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation';
     const DEFAULT_ACCESS_CONFIG = {
-      directoryTableId: 'Annuaire',
+      directoryTableId: 'ANNUAIRE',
+      directoryTableIds: ['ANNUAIRE', 'Annuaire', 'Feuil1'],
       emailColumn: 'email',
       rightsColumn: 'droits_proposes',
       roleColumn: 'role_grist_propose'
@@ -658,6 +659,20 @@
       return Object.assign({}, DEFAULT_ACCESS_CONFIG, widgetOptions.accessControl || {});
     }
 
+    function uniqueList(values) {
+      const seen = {};
+      return values.filter(function(value) {
+        const text = String(value || '').trim();
+        if (!text || seen[text]) return false;
+        seen[text] = true;
+        return true;
+      });
+    }
+
+    function directoryTableCandidates(config) {
+      return uniqueList([config.directoryTableId].concat(config.directoryTableIds || []));
+    }
+
     function withTimeout(promise, timeoutMs, message) {
       return Promise.race([
         promise,
@@ -667,6 +682,19 @@
       ]);
     }
 
+    async function fetchContributorDirectoryTable(config) {
+      const tableIds = directoryTableCandidates(config);
+      let lastError = null;
+      for (let index = 0; index < tableIds.length; index += 1) {
+        try {
+          return await grist.docApi.fetchTable(tableIds[index]);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("Impossible de lire la table d'annuaire des contributeurs");
+    }
+
     async function loadContributorDirectory() {
       if (contributorDirectoryCache) return contributorDirectoryCache;
       if (!window.grist || !grist.docApi || typeof grist.docApi.fetchTable !== 'function') {
@@ -674,7 +702,7 @@
       }
       const config = accessConfig();
       const tableData = await withTimeout(
-        grist.docApi.fetchTable(config.directoryTableId),
+        fetchContributorDirectoryTable(config),
         8000,
         "Impossible de vérifier le droit de proposition dans l'annuaire"
       );
