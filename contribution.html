@@ -332,6 +332,17 @@
     .status--error { color: var(--danger); }
     .status--ok { color: var(--ok); }
 
+    .access-alert {
+      padding: 14px 15px;
+      border: 1px solid #fecdca;
+      border-radius: 12px;
+      background: #fff1f0;
+      color: var(--danger);
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.5;
+    }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
@@ -416,6 +427,7 @@
       </div>
       <form id="form" novalidate></form>
       <div id="status" class="status"></div>
+      <div id="accessAlert" class="access-alert" role="alert" hidden></div>
       <div class="actions">
         <button type="button" class="secondary" id="backButton">Précédent</button>
         <div class="button-group">
@@ -437,7 +449,7 @@
       rightsColumn: 'droits_proposes',
       roleColumn: 'role_grist_propose'
     };
-    const PROPOSAL_DENIED_MESSAGE = "Vous n'avez pas accès aux propositions de projets, veuillez contacter l'administrateur du site";
+    const PROPOSAL_DENIED_MESSAGE = "Vous n'avez pas accès aux propositions de projets. Veuillez contacter l'administrateur du site pour demander l'ouverture de votre droit de contribution.";
     const steps = [
       { section: 'Coordonnées', title: 'Personne qui propose le projet', type: 'fields', fields: [
         { key: 'proposant_nom', label: 'Nom', type: 'text' },
@@ -537,6 +549,7 @@
 
     const form = document.getElementById('form');
     const status = document.getElementById('status');
+    const accessAlert = document.getElementById('accessAlert');
     const authLink = document.getElementById('authLink');
     const backButton = document.getElementById('backButton');
     const nextButton = document.getElementById('nextButton');
@@ -563,9 +576,16 @@
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
     }
 
+    function setAccessAlert(message) {
+      if (!accessAlert) return;
+      accessAlert.textContent = message || '';
+      accessAlert.hidden = !message;
+    }
+
     function setStatus(message, kind) {
       status.textContent = message || '';
       status.className = 'status' + (kind ? ' status--' + kind : '');
+      setAccessAlert(kind === 'error' ? message : '');
     }
 
     function normalizeEmail(value) {
@@ -606,13 +626,27 @@
       return Object.assign({}, DEFAULT_ACCESS_CONFIG, widgetOptions.accessControl || {});
     }
 
+    function withTimeout(promise, timeoutMs, message) {
+      return Promise.race([
+        promise,
+        new Promise(function(_resolve, reject) {
+          setTimeout(function() { reject(new Error(message)); }, timeoutMs);
+        })
+      ]);
+    }
+
     async function loadContributorDirectory() {
       if (contributorDirectoryCache) return contributorDirectoryCache;
       if (!window.grist || !grist.docApi || typeof grist.docApi.fetchTable !== 'function') {
         throw new Error('API Grist indisponible pour lire l’annuaire');
       }
       const config = accessConfig();
-      contributorDirectoryCache = normalizeGristTable(await grist.docApi.fetchTable(config.directoryTableId));
+      const tableData = await withTimeout(
+        grist.docApi.fetchTable(config.directoryTableId),
+        8000,
+        "Impossible de vérifier le droit de proposition dans l'annuaire"
+      );
+      contributorDirectoryCache = normalizeGristTable(tableData);
       return contributorDirectoryCache;
     }
 
