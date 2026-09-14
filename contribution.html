@@ -594,7 +594,39 @@
 
     function normalizeCell(value) {
       if (Array.isArray(value)) return value.slice(value[0] === 'L' ? 1 : 0).join('; ');
-      return String(value || '');
+      if (value === true) return 'oui';
+      if (value === false || value == null) return '';
+      return String(value);
+    }
+
+    function normalizeForSearch(value) {
+      return normalizeCell(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+    }
+
+    function comparableColumnName(value) {
+      return normalizeForSearch(value).replace(/[^a-z0-9]/g, '');
+    }
+
+    function getRowValue(row, column) {
+      if (!row || !column) return undefined;
+      if (Object.prototype.hasOwnProperty.call(row, column)) return row[column];
+      const expected = comparableColumnName(column);
+      const matchingKey = Object.keys(row).find(function(key) {
+        return comparableColumnName(key) === expected;
+      });
+      return matchingKey ? row[matchingKey] : undefined;
+    }
+
+    function findFirstExistingValue(row, columns) {
+      for (let index = 0; index < columns.length; index += 1) {
+        const value = getRowValue(row, columns[index]);
+        if (value !== undefined && value !== null && normalizeCell(value).trim() !== '') return value;
+      }
+      return '';
     }
 
     function normalizeGristTable(tableData) {
@@ -652,9 +684,30 @@
 
     function rowAllowsProposal(row) {
       const config = accessConfig();
-      const rights = normalizeCell(row[config.rightsColumn]).toLowerCase();
-      const role = normalizeCell(row[config.roleColumn]).toLowerCase();
-      return rights.includes('proposition') || ['admin', 'animateur', 'membre'].includes(role);
+      const rights = normalizeForSearch(findFirstExistingValue(row, [
+        config.rightsColumn,
+        'droits_proposes',
+        'droits_proposition',
+        'droit_proposition',
+        'droits',
+        'acces_proposition',
+        'proposition',
+        'peut_proposer'
+      ]));
+      const role = normalizeForSearch(findFirstExistingValue(row, [
+        config.roleColumn,
+        'role_grist_propose',
+        'role',
+        'profil',
+        'statut'
+      ]));
+      const roleAllows = ['admin', 'administrateur', 'animateur', 'membre'].some(function(keyword) {
+        return role.includes(keyword);
+      });
+      const rightsAllows = ['proposition', 'proposer', 'contribution', 'contributeur', 'edition', 'ecriture', 'oui', 'true', '1'].some(function(keyword) {
+        return rights.includes(keyword);
+      });
+      return roleAllows || rightsAllows;
     }
 
     async function verifyProposalAccess() {
@@ -668,7 +721,15 @@
       }
       const rows = await loadContributorDirectory();
       const contributor = rows.find(function(row) {
-        return normalizeEmail(row[config.emailColumn]) === email;
+        return normalizeEmail(findFirstExistingValue(row, [
+          config.emailColumn,
+          'email',
+          'e_mail',
+          'mail',
+          'courriel',
+          'adresse_email',
+          'adresse_mail'
+        ])) === email;
       });
       if (!contributor || !rowAllowsProposal(contributor)) {
         setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
