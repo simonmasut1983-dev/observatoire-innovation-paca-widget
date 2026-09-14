@@ -392,19 +392,6 @@
   </style>
 </head>
 <body>
-  <nav class="portal-topbar" aria-label="Navigation de l'observatoire">
-    <a class="portal-brand" href="https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation/p/18" target="_top">
-      <span class="portal-mark" aria-hidden="true">◆</span>
-      <span>Observatoire de l'innovation PACA</span>
-    </a>
-    <div class="portal-nav">
-      <a href="https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation/p/18" target="_top">Accueil</a>
-      <a href="https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation/p/4" target="_top">Carte</a>
-      <a class="active" href="https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation/p/20" target="_top">Proposer un projet</a>
-      <a href="https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation/p/15" target="_top">Espace contributeur</a>
-    </div>
-  </nav>
-
   <div class="page-wrap">
   <main class="shell">
     <header>
@@ -444,6 +431,13 @@
   <script>
     const STORAGE_KEY = 'observatoire-innovation-contribution-draft-v1';
     const CONNECTED_URL = 'https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation';
+    const DEFAULT_ACCESS_CONFIG = {
+      directoryTableId: 'Feuil1',
+      emailColumn: 'email',
+      rightsColumn: 'droits_proposes',
+      roleColumn: 'role_grist_propose'
+    };
+    const PROPOSAL_DENIED_MESSAGE = "Vous n'avez pas accès aux propositions de projets, veuillez contacter l'administrateur du site";
     const steps = [
       { section: 'Coordonnées', title: 'Personne qui propose le projet', type: 'fields', fields: [
         { key: 'proposant_nom', label: 'Nom', type: 'text' },
@@ -538,6 +532,8 @@
     let draft = readDraft();
     let fileDraft = {};
     let interactionInfo = {};
+    let widgetOptions = {};
+    let contributorDirectoryCache = null;
 
     const form = document.getElementById('form');
     const status = document.getElementById('status');
@@ -570,6 +566,81 @@
     function setStatus(message, kind) {
       status.textContent = message || '';
       status.className = 'status' + (kind ? ' status--' + kind : '');
+    }
+
+    function normalizeEmail(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizeCell(value) {
+      if (Array.isArray(value)) return value.slice(value[0] === 'L' ? 1 : 0).join('; ');
+      return String(value || '');
+    }
+
+    function normalizeGristTable(tableData) {
+      if (!tableData) return [];
+      if (Array.isArray(tableData)) return tableData;
+      if (Array.isArray(tableData.records)) {
+        return tableData.records.map(function(record) {
+          return Object.assign({ id: record.id }, record.fields || record);
+        });
+      }
+      const keys = Object.keys(tableData).filter(function(key) {
+        return Array.isArray(tableData[key]);
+      });
+      const length = keys.reduce(function(max, key) {
+        return Math.max(max, tableData[key].length);
+      }, 0);
+      const rows = [];
+      for (let index = 0; index < length; index += 1) {
+        const row = {};
+        keys.forEach(function(key) {
+          row[key] = tableData[key][index];
+        });
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function accessConfig() {
+      return Object.assign({}, DEFAULT_ACCESS_CONFIG, widgetOptions.accessControl || {});
+    }
+
+    async function loadContributorDirectory() {
+      if (contributorDirectoryCache) return contributorDirectoryCache;
+      if (!window.grist || !grist.docApi || typeof grist.docApi.fetchTable !== 'function') {
+        throw new Error('API Grist indisponible pour lire l’annuaire');
+      }
+      const config = accessConfig();
+      contributorDirectoryCache = normalizeGristTable(await grist.docApi.fetchTable(config.directoryTableId));
+      return contributorDirectoryCache;
+    }
+
+    function rowAllowsProposal(row) {
+      const config = accessConfig();
+      const rights = normalizeCell(row[config.rightsColumn]).toLowerCase();
+      const role = normalizeCell(row[config.roleColumn]).toLowerCase();
+      return rights.includes('proposition') || ['admin', 'animateur', 'membre'].includes(role);
+    }
+
+    async function verifyProposalAccess() {
+      const config = accessConfig();
+      const email = normalizeEmail(draft.proposant_email);
+      if (!email) {
+        setStatus('Veuillez renseigner votre adresse email pour vérifier le droit de proposition.', 'error');
+        const emailInput = document.getElementById('proposant_email');
+        if (emailInput) emailInput.focus();
+        return false;
+      }
+      const rows = await loadContributorDirectory();
+      const contributor = rows.find(function(row) {
+        return normalizeEmail(row[config.emailColumn]) === email;
+      });
+      if (!contributor || !rowAllowsProposal(contributor)) {
+        setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
+        return false;
+      }
+      return true;
     }
 
     function markdownToHtml(value) {
@@ -771,12 +842,26 @@
       render();
     });
 
-    nextButton.addEventListener('click', function() {
+    nextButton.addEventListener('click', async function() {
       if (currentStep === steps.length - 1) {
         submitToGrist();
         return;
       }
       storeInputs();
+      if (currentStep === 0) {
+        nextButton.disabled = true;
+        setStatus('Vérification de votre droit de proposition...', '');
+        try {
+          const canPropose = await verifyProposalAccess();
+          if (!canPropose) return;
+        } catch (error) {
+          console.error(error);
+          setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
+          return;
+        } finally {
+          nextButton.disabled = false;
+        }
+      }
       currentStep = Math.min(steps.length - 1, currentStep + 1);
       render();
     });
@@ -793,6 +878,8 @@
     if (window.grist) {
       grist.ready({ requiredAccess: 'full', columns: gristColumns });
       grist.onOptions(function(options, interaction) {
+        widgetOptions = options || {};
+        contributorDirectoryCache = null;
         interactionInfo = interaction || {};
       });
     }
