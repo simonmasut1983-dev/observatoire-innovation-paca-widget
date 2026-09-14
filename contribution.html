@@ -447,7 +447,7 @@
       directoryTableId: 'ANNUAIRE',
       directoryTableIds: ['ANNUAIRE', 'Annuaire', 'Feuil1'],
       emailColumn: 'email',
-      rightsColumn: 'droits_proposes',
+      rightsColumn: 'droits_codes',
       roleColumn: 'role_grist_propose'
     };
     const PROPOSAL_DENIED_MESSAGE = "Vous n'avez pas accès aux propositions de projets. Veuillez contacter l'administrateur du site pour demander l'ouverture de votre droit de contribution.";
@@ -714,6 +714,7 @@
       const config = accessConfig();
       const rights = normalizeForSearch(findFirstExistingValue(row, [
         config.rightsColumn,
+        'droits_codes',
         'droits_proposes',
         'droits_proposition',
         'droit_proposition',
