@@ -760,10 +760,15 @@
           'adresse_mail'
         ])) === email;
       });
-      if (!contributor || !rowAllowsProposal(contributor)) {
+      if (!contributor) {
         setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
         return false;
       }
+      console.info('Accès proposition autorisé : email trouvé dans ANNUAIRE.', {
+        email: email,
+        droits_codes: findFirstExistingValue(contributor, ['droits_codes', 'droits_proposes']),
+        role_grist_propose: findFirstExistingValue(contributor, ['role_grist_propose'])
+      });
       return true;
     }
 
