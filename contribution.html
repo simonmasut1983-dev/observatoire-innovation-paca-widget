@@ -589,8 +589,21 @@
       setAccessAlert(kind === 'error' ? message : '');
     }
 
+    function extractEmail(value) {
+      const text = normalizeCell(value)
+        .normalize('NFKC')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/^mailto:/i, '')
+        .trim();
+      const match = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+      return match ? match[0] : text;
+    }
+
     function normalizeEmail(value) {
-      return String(value || '').trim().toLowerCase();
+      return extractEmail(value)
+        .replace(/\s+/g, '')
+        .replace(/[<>"']/g, '')
+        .toLowerCase();
     }
 
     function normalizeCell(value) {
@@ -628,6 +641,27 @@
         if (value !== undefined && value !== null && normalizeCell(value).trim() !== '') return value;
       }
       return '';
+    }
+
+    function emailColumnCandidates(config) {
+      return [
+        config.emailColumn,
+        'email',
+        'Email',
+        'e_mail',
+        'E_mail',
+        'mail',
+        'Mail',
+        'courriel',
+        'Courriel',
+        'adresse_email',
+        'adresse_e_mail',
+        'adresse_mail',
+        'Adresse email',
+        'Adresse e-mail',
+        'E mail',
+        'E-mail'
+      ];
     }
 
     function normalizeGristTable(tableData) {
@@ -749,19 +783,25 @@
         return false;
       }
       const rows = await loadContributorDirectory();
+      const columns = emailColumnCandidates(config);
       const contributor = rows.find(function(row) {
-        return normalizeEmail(findFirstExistingValue(row, [
-          config.emailColumn,
-          'email',
-          'e_mail',
-          'mail',
-          'courriel',
-          'adresse_email',
-          'adresse_mail'
-        ])) === email;
+        return normalizeEmail(findFirstExistingValue(row, columns)) === email;
       });
       if (!contributor) {
-        setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
+        console.warn('Email non trouvé dans ANNUAIRE.', {
+          emailSaisi: draft.proposant_email,
+          emailNormalise: email,
+          lignesAnnuaireLues: rows.length,
+          colonnesEmailCherchees: columns
+        });
+        setStatus(
+          "Email non trouvé dans l'annuaire. Diagnostic : adresse testée « " +
+          email +
+          " », " +
+          rows.length +
+          " ligne(s) lue(s) dans ANNUAIRE. Vérifiez que l'adresse existe bien dans la colonne email de l'annuaire.",
+          'error'
+        );
         return false;
       }
       console.info('Accès proposition autorisé : email trouvé dans ANNUAIRE.', {
