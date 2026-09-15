@@ -757,20 +757,7 @@
         'proposition',
         'peut_proposer'
       ]));
-      const role = normalizeForSearch(findFirstExistingValue(row, [
-        config.roleColumn,
-        'role_grist_propose',
-        'role',
-        'profil',
-        'statut'
-      ]));
-      const roleAllows = ['admin', 'administrateur', 'animateur', 'membre'].some(function(keyword) {
-        return role.includes(keyword);
-      });
-      const rightsAllows = ['proposition', 'proposer', 'contribution', 'contributeur', 'edition', 'ecriture', 'oui', 'true', '1'].some(function(keyword) {
-        return rights.includes(keyword);
-      });
-      return roleAllows || rightsAllows;
+      return rights.includes('proposition');
     }
 
     async function verifyProposalAccess() {
@@ -804,7 +791,32 @@
         );
         return false;
       }
-      console.info('Accès proposition autorisé : email trouvé dans ANNUAIRE.', {
+
+      if (!rowAllowsProposal(contributor)) {
+        const rightsValue = findFirstExistingValue(contributor, [
+          config.rightsColumn,
+          'droits_codes',
+          'droits_proposes',
+          'droits_proposition',
+          'droit_proposition',
+          'droits',
+          'acces_proposition',
+          'proposition',
+          'peut_proposer'
+        ]);
+        console.warn('Email trouvé dans ANNUAIRE mais droit proposition absent.', {
+          email: email,
+          droits: rightsValue
+        });
+        setStatus(
+          PROPOSAL_DENIED_MESSAGE +
+          " Diagnostic : votre adresse est bien présente dans l'annuaire, mais le droit « proposition » n'a pas été trouvé dans vos droits.",
+          'error'
+        );
+        return false;
+      }
+
+      console.info('Accès proposition autorisé : email trouvé dans ANNUAIRE avec droit proposition.', {
         email: email,
         droits_codes: findFirstExistingValue(contributor, ['droits_codes', 'droits_proposes']),
         role_grist_propose: findFirstExistingValue(contributor, ['role_grist_propose'])
