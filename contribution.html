@@ -443,6 +443,7 @@
   <script>
     const STORAGE_KEY = 'observatoire-innovation-contribution-draft-v1';
     const CONNECTED_URL = 'https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation';
+    const DIRECT_FORM_URL = 'https://grist.numerique.gouv.fr/o/docs/nda71dpe5F6y/Observatoire-de-linnovation/p/20';
     const DEFAULT_ACCESS_CONFIG = {
       directoryTableId: 'ANNUAIRE',
       directoryTableIds: ['ANNUAIRE', 'Annuaire', 'Feuil1'],
@@ -587,6 +588,24 @@
       status.textContent = kind === 'error' ? '' : (message || '');
       status.className = 'status' + (kind ? ' status--' + kind : '');
       setAccessAlert(kind === 'error' ? message : '');
+    }
+
+    function isGristApiUnavailableError(error) {
+      return /API Grist indisponible|Grist|docApi/i.test(String(error && (error.message || error)));
+    }
+
+    function showDirectFormFallback() {
+      if (authLink) {
+        authLink.href = DIRECT_FORM_URL;
+        authLink.target = '_top';
+        authLink.rel = '';
+        authLink.textContent = 'Ouvrir le formulaire sécurisé dans Grist';
+        authLink.hidden = false;
+      }
+      setStatus(
+        "Le formulaire est actuellement ouvert dans un cadre qui ne permet pas de vérifier vos droits dans Grist. Ouvrez le formulaire sécurisé dans Grist, puis réessayez : la vérification de l'annuaire et du droit « proposition » pourra alors fonctionner.",
+        'error'
+      );
     }
 
     function extractEmail(value) {
@@ -1037,7 +1056,11 @@
           if (!canPropose) return;
         } catch (error) {
           console.error(error);
-          setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
+          if (isGristApiUnavailableError(error)) {
+            showDirectFormFallback();
+          } else {
+            setStatus(PROPOSAL_DENIED_MESSAGE, 'error');
+          }
           return;
         } finally {
           nextButton.disabled = false;
