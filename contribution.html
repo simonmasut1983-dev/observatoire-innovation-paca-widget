@@ -413,8 +413,8 @@
       </div>
       <div class="progress" aria-live="polite">
         <div class="progress__label">
-          <span id="progressText">Étape 1 sur 13</span>
-          <span id="progressPercent">8%</span>
+          <span id="progressText">Étape 1 sur 6</span>
+          <span id="progressPercent">17%</span>
         </div>
         <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
       </div>
@@ -453,56 +453,31 @@
     };
     const PROPOSAL_DENIED_MESSAGE = "Vous n'avez pas accès aux propositions de projets. Veuillez contacter l'administrateur du site pour demander l'ouverture de votre droit de contribution.";
     const steps = [
-      { section: 'Coordonnées', title: 'Personne qui propose le projet', type: 'fields', fields: [
-        { key: 'proposant_nom', label: 'Nom', type: 'text' },
-        { key: 'proposant_prenom', label: 'Prénom', type: 'text' },
-        { key: 'proposant_structure', label: 'Nom de la structure', type: 'text' },
-        { key: 'proposant_fonction', label: 'Fonction', type: 'text' },
-        { key: 'proposant_email', label: 'E mail', type: 'email' },
-        { key: 'proposant_telephone', label: 'Téléphone', type: 'tel' }
-      ] },
-      { section: 'Contact', title: "Maître d'ouvrage", type: 'fields', fields: [
-        { key: 'moa_structure', label: 'Nom de la structure', type: 'text' },
-        { key: 'moa_nom', label: 'Nom', type: 'text' },
-        { key: 'moa_prenom', label: 'Prénom', type: 'text' },
-        { key: 'moa_fonction', label: 'Fonction', type: 'text' },
-        { key: 'moa_email', label: 'E mail', type: 'email' },
-        { key: 'moa_telephone', label: 'Téléphone', type: 'tel' }
-      ] },
-      { section: 'Contact', title: "Maître d'œuvre", type: 'fields', fields: [
-        { key: 'moe_structure', label: "Nom du Maître d'œuvre", type: 'text' },
-        { key: 'moe_nom', label: 'Nom', type: 'text' },
-        { key: 'moe_prenom', label: 'Prénom', type: 'text' },
-        { key: 'moe_fonction', label: 'Fonction', type: 'text' },
-        { key: 'moe_email', label: 'E mail', type: 'email' },
-        { key: 'moe_telephone', label: 'Téléphone', type: 'tel' }
-      ] },
-      { section: 'Contact', title: 'Entreprise', type: 'fields', fields: [
-        { key: 'entreprise_structure', label: "Nom de l'entreprise", type: 'text' },
-        { key: 'entreprise_nom', label: 'Nom', type: 'text' },
-        { key: 'entreprise_prenom', label: 'Prénom', type: 'text' },
-        { key: 'entreprise_fonction', label: 'Fonction', type: 'text' },
-        { key: 'entreprise_email', label: 'E mail', type: 'email' },
-        { key: 'entreprise_telephone', label: 'Téléphone', type: 'tel' }
-      ] },
-      { section: 'Projet', title: "Nom de l'opération", type: 'fields', fields: [
-        { key: 'nom_operation', label: "Nom de l'opération", type: 'text' }
-      ] },
-      { section: 'Projet', title: 'Description du projet', type: 'markdown', key: 'description', label: 'Description du projet' },
-      { section: 'Projet', title: 'Caractéristiques techniques du projet', type: 'markdown', key: 'caracteristiques_techniques', label: 'Caractéristiques techniques du projet' },
-      { section: 'Projet', title: 'Caractère innovant du projet', type: 'fields', fields: [
-        { key: 'caractere_innovant', label: 'Caractère innovant du projet', type: 'text' }
-      ] },
-      { section: 'Projet', title: 'Localisation du projet', type: 'fields', fields: [
-        { key: 'localisation', label: 'Localisation du projet', type: 'text' }
-      ] },
-      { section: 'Projet', title: 'Coordonnées géographiques', type: 'fields', fields: [
-        { key: 'latitude', label: 'Latitude', type: 'number', step: 'any' },
-        { key: 'longitude', label: 'Longitude', type: 'number', step: 'any' }
-      ] },
-      { section: 'Pièces jointes', title: 'Documentation technique', type: 'file', key: 'documentation_technique', label: 'Documentation technique', accept: '.pdf,.doc,.docx,.odt,.xls,.xlsx,.csv,.zip,image/*' },
-      { section: 'Pièces jointes', title: 'Illustrations du projet', type: 'file', key: 'illustration_projet', label: 'Illustration du projet', accept: 'image/*' },
-      { section: 'Validation', title: 'Vérifier et envoyer', type: 'review' }
+      { section:'Projet', title:'Informations principales', type:'fields', note:"Renseignez l’adresse ou les deux coordonnées géographiques. L’un de ces deux modes de localisation est requis.", fields:[
+        {key:'nom_operation',label:"Nom de l’opération",type:'text',required:true,full:true},
+        {key:'date_creation_operation',label:"Date de création de l’opération",type:'date',required:true},
+        {key:'localisation',label:'Adresse du projet',type:'text',full:true},
+        {key:'latitude',label:'Latitude',type:'number',step:'any'},
+        {key:'longitude',label:'Longitude',type:'number',step:'any'}
+      ]},
+      { section:'Acteurs', title:"Maîtrise d’ouvrage", type:'fields', fields:[
+        {key:'moa_structure',label:'Nom de la structure',type:'text',full:true},{key:'moa_nom',label:'Nom',type:'text'},{key:'moa_prenom',label:'Prénom',type:'text'},{key:'moa_fonction',label:'Fonction',type:'text'},{key:'moa_email',label:'E-mail',type:'email'},{key:'moa_telephone',label:'Téléphone',type:'tel'}
+      ]},
+      { section:'Acteurs', title:"Maîtrise d’œuvre", type:'fields', fields:[
+        {key:'moe_structure',label:"Nom du maître d’œuvre",type:'text',full:true},{key:'moe_nom',label:'Nom',type:'text'},{key:'moe_prenom',label:'Prénom',type:'text'},{key:'moe_fonction',label:'Fonction',type:'text'},{key:'moe_email',label:'E-mail',type:'email'},{key:'moe_telephone',label:'Téléphone',type:'tel'}
+      ]},
+      { section:'Acteurs', title:'Entreprise', type:'fields', fields:[
+        {key:'entreprise_structure',label:"Nom de l’entreprise",type:'text',full:true},{key:'entreprise_nom',label:'Nom',type:'text'},{key:'entreprise_prenom',label:'Prénom',type:'text'},{key:'entreprise_fonction',label:'Fonction',type:'text'},{key:'entreprise_email',label:'E-mail',type:'email'},{key:'entreprise_telephone',label:'Téléphone',type:'tel'}
+      ]},
+      { section:'Projet', title:'Présentation du projet', type:'fields', fields:[
+        {key:'description',label:'Description du projet',textarea:true,required:true,full:true},
+        {key:'caracteristiques_techniques',label:'Caractéristiques techniques du projet',textarea:true,full:true},
+        {key:'caractere_innovant',label:'Caractère innovant du projet',textarea:true,full:true}
+      ]},
+      { section:'Pièces jointes', title:'Documents et illustrations', type:'files', fields:[
+        {key:'documentation_technique',label:'Documentation technique',accept:'.pdf,.doc,.docx,.odt,.xls,.xlsx,.csv,.zip,image/*'},
+        {key:'illustration_projet',label:'Illustrations du projet',accept:'image/*'}
+      ]}
     ];
     const gristColumns = [
       { name: 'proposant_nom', title: 'Proposant - nom', optional: true },
@@ -530,6 +505,7 @@
       { name: 'entreprise_email', title: 'Entreprise - email', optional: true },
       { name: 'entreprise_telephone', title: 'Entreprise - téléphone', optional: true },
       { name: 'nom_operation', title: "Nom de l'opération", optional: true },
+      { name: 'date_creation_operation', title: "Date de création de l'opération", optional: true },
       { name: 'description', title: 'Description', optional: true },
       { name: 'caracteristiques_techniques', title: 'Caractéristiques techniques', optional: true },
       { name: 'caractere_innovant', title: 'Caractère innovant', optional: true },
@@ -865,12 +841,27 @@
     }
 
     function inputMarkup(field) {
-      const stepAttr = field.step ? ' step="' + escapeHtml(field.step) + '"' : '';
-      return '<div class="field"><label for="' + field.key + '">' + escapeHtml(field.label) + '</label><input id="' + field.key + '" data-key="' + field.key + '" type="' + escapeHtml(field.type || 'text') + '"' + stepAttr + ' value="' + escapeHtml(draft[field.key] || '') + '" /></div>';
+      const stepAttr=field.step?' step="'+escapeHtml(field.step)+'"':'';
+      const req=field.required?' required aria-required="true"':'';
+      const full=field.full?' style="grid-column:1 / -1"':'';
+      const label=escapeHtml(field.label)+(field.required?' <span style="color:#b42318">*</span>':'');
+      if(field.textarea)return '<div class="field"'+full+'><label for="'+field.key+'">'+label+'</label><textarea id="'+field.key+'" data-key="'+field.key+'"'+req+'>'+escapeHtml(draft[field.key]||'')+'</textarea></div>';
+      return '<div class="field"'+full+'><label for="'+field.key+'">'+label+'</label><input id="'+field.key+'" data-key="'+field.key+'" type="'+escapeHtml(field.type||'text')+'"'+stepAttr+req+' value="'+escapeHtml(draft[field.key]||'')+'" /></div>';
     }
-
-    function renderFields(step) {
-      form.innerHTML = '<div class="grid">' + step.fields.map(inputMarkup).join('') + '</div>';
+    function renderFields(step){form.innerHTML=(step.note?'<p class="notice">'+escapeHtml(step.note)+'</p>':'')+'<div class="grid">'+step.fields.map(inputMarkup).join('')+'</div>';}
+    function renderFiles(step){
+      form.innerHTML='<div class="grid">'+step.fields.map(function(field){const file=fileDraft[field.key];return '<div class="drop"><label for="'+field.key+'">'+escapeHtml(field.label)+'</label><input id="'+field.key+'" data-key="'+field.key+'" type="file" accept="'+escapeHtml(field.accept||'')+'" /><span class="file-name" id="file-'+field.key+'">'+escapeHtml(file?file.name:'Aucun fichier sélectionné')+'</span></div>';}).join('')+'</div><p class="notice">Les fichiers restent dans cette session jusqu’à l’envoi final.</p>';
+      form.querySelectorAll('input[type="file"]').forEach(function(input){input.addEventListener('change',function(e){const file=e.target.files&&e.target.files[0];if(file)fileDraft[input.dataset.key]=file;document.getElementById('file-'+input.dataset.key).textContent=file?file.name:'Aucun fichier sélectionné';});});
+    }
+    function validateCurrentStep(){
+      storeInputs();
+      if(currentStep===0){
+        if(!String(draft.nom_operation||'').trim()||!String(draft.date_creation_operation||'').trim()){setStatus("Le nom et la date de création de l’opération sont obligatoires.",'error');return false;}
+        const address=String(draft.localisation||'').trim(),lat=String(draft.latitude||'').trim(),lon=String(draft.longitude||'').trim();
+        if(!address&&!(lat&&lon)){setStatus("Indiquez une adresse, ou renseignez à la fois la latitude et la longitude.",'error');return false;}
+      }
+      if(currentStep===4&&!String(draft.description||'').trim()){setStatus("La description du projet est obligatoire.",'error');return false;}
+      return true;
     }
 
     function applyMarkdown(key, prefix, suffix, placeholder) {
@@ -976,6 +967,7 @@
       if (step.type === 'fields') renderFields(step);
       if (step.type === 'markdown') renderMarkdown(step);
       if (step.type === 'file') renderFile(step);
+      if (step.type === 'files') renderFiles(step);
       if (step.type === 'review') renderReview();
 
       form.querySelectorAll('input[data-key], textarea[data-key]').forEach(function(input) {
@@ -1048,6 +1040,7 @@
         return;
       }
       storeInputs();
+      if (!validateCurrentStep()) return;
       if (currentStep === 0) {
         nextButton.disabled = true;
         setStatus('Vérification de votre droit de proposition...', '');
