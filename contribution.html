@@ -456,6 +456,7 @@
       { section:'Projet', title:'Informations principales', type:'fields', note:"Renseignez l’adresse ou les deux coordonnées géographiques. L’un de ces deux modes de localisation est requis.", fields:[
         {key:'nom_operation',label:"Nom de l’opération",type:'text',required:true,full:true},
         {key:'date_creation_operation',label:"Date de création de l’opération",type:'date',required:true},
+        {key:'proposant_email',label:'Votre adresse e-mail',type:'email',required:true,full:true},
         {key:'localisation',label:'Adresse du projet',type:'text',full:true},
         {key:'latitude',label:'Latitude',type:'number',step:'any'},
         {key:'longitude',label:'Longitude',type:'number',step:'any'}
@@ -848,7 +849,7 @@
       if(field.textarea)return '<div class="field"'+full+'><label for="'+field.key+'">'+label+'</label><textarea id="'+field.key+'" data-key="'+field.key+'"'+req+'>'+escapeHtml(draft[field.key]||'')+'</textarea></div>';
       return '<div class="field"'+full+'><label for="'+field.key+'">'+label+'</label><input id="'+field.key+'" data-key="'+field.key+'" type="'+escapeHtml(field.type||'text')+'"'+stepAttr+req+' value="'+escapeHtml(draft[field.key]||'')+'" /></div>';
     }
-    function renderFields(step){form.innerHTML=(step.note?'<p class="notice">'+escapeHtml(step.note)+'</p>':'')+'<div class="grid">'+step.fields.map(inputMarkup).join('')+'</div>';}
+    function renderFields(step){form.innerHTML='<div class="grid">'+step.fields.map(inputMarkup).join('')+'</div>'+(step.note?'<p class="notice" style="margin-top:16px">'+escapeHtml(step.note)+'</p>':'');}
     function renderFiles(step){
       form.innerHTML='<div class="grid">'+step.fields.map(function(field){const file=fileDraft[field.key];return '<div class="drop"><label for="'+field.key+'">'+escapeHtml(field.label)+'</label><input id="'+field.key+'" data-key="'+field.key+'" type="file" accept="'+escapeHtml(field.accept||'')+'" /><span class="file-name" id="file-'+field.key+'">'+escapeHtml(file?file.name:'Aucun fichier sélectionné')+'</span></div>';}).join('')+'</div><p class="notice">Les fichiers restent dans cette session jusqu’à l’envoi final.</p>';
       form.querySelectorAll('input[type="file"]').forEach(function(input){input.addEventListener('change',function(e){const file=e.target.files&&e.target.files[0];if(file)fileDraft[input.dataset.key]=file;document.getElementById('file-'+input.dataset.key).textContent=file?file.name:'Aucun fichier sélectionné';});});
@@ -857,6 +858,8 @@
       storeInputs();
       if(currentStep===0){
         if(!String(draft.nom_operation||'').trim()||!String(draft.date_creation_operation||'').trim()){setStatus("Le nom et la date de création de l’opération sont obligatoires.",'error');return false;}
+        const email=normalizeEmail(draft.proposant_email);
+        if(!email||!email.includes('@')){setStatus("Renseignez une adresse e-mail valide afin de vérifier votre accès.",'error');return false;}
         const address=String(draft.localisation||'').trim(),lat=String(draft.latitude||'').trim(),lon=String(draft.longitude||'').trim();
         if(!address&&!(lat&&lon)){setStatus("Indiquez une adresse, ou renseignez à la fois la latitude et la longitude.",'error');return false;}
       }
