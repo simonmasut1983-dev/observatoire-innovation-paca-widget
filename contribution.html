@@ -505,17 +505,18 @@
       { name: 'entreprise_fonction', title: 'Entreprise - fonction', optional: true },
       { name: 'entreprise_email', title: 'Entreprise - email', optional: true },
       { name: 'entreprise_telephone', title: 'Entreprise - téléphone', optional: true },
-      { name: 'nom_operation', title: "Nom de l'opération", optional: true },
-      { name: 'date_creation_operation', title: "Date de création de l'opération", optional: true },
+      { name: 'nom_operation', title: 'titre', optional: true },
+      { name: 'date_creation_operation', title: 'date', optional: true },
+      { name: 'auteur', title: 'auteur', optional: true },
       { name: 'description', title: 'Description', optional: true },
-      { name: 'caracteristiques_techniques', title: 'Caractéristiques techniques', optional: true },
-      { name: 'caractere_innovant', title: 'Caractère innovant', optional: true },
-      { name: 'localisation', title: 'Localisation', optional: true },
+      { name: 'caracteristiques_techniques', title: 'technique', optional: true },
+      { name: 'caractere_innovant', title: 'innovation', optional: true },
+      { name: 'localisation', title: 'adresse', optional: true },
       { name: 'latitude', title: 'Latitude', optional: true },
       { name: 'longitude', title: 'Longitude', optional: true },
       { name: 'documentation_technique', title: 'Documentation technique', type: 'Attachments', optional: true },
       { name: 'illustration_projet', title: 'Illustration du projet', type: 'Attachments', optional: true },
-      { name: 'statut_contribution', title: 'Statut de la contribution', optional: true },
+      { name: 'statut_contribution', title: 'statut', optional: true },
       { name: 'date_soumission', title: 'Date de soumission', optional: true }
     ];
 
@@ -525,6 +526,7 @@
     let interactionInfo = {};
     let widgetOptions = {};
     let contributorDirectoryCache = null;
+    let verifiedContributor = null;
 
     const form = document.getElementById('form');
     const status = document.getElementById('status');
@@ -812,6 +814,7 @@
         return false;
       }
 
+      verifiedContributor = contributor;
       console.info('Accès proposition autorisé : email trouvé dans ANNUAIRE avec droit proposition.', {
         email: email,
         droits_codes: findFirstExistingValue(contributor, ['droits_codes', 'droits_proposes']),
@@ -1008,24 +1011,38 @@
       setStatus('Préparation de l’envoi...', '');
       nextButton.disabled = true;
       try {
-        const docIds = await uploadAttachment(fileDraft.documentation_technique);
-        const imageIds = await uploadAttachment(fileDraft.illustration_projet);
-        const fields = cleanFields(Object.assign({}, draft, {
-          statut_contribution: 'A valider',
-          date_soumission: new Date().toISOString(),
-          documentation_technique: docIds.length ? ['L'].concat(docIds) : undefined,
-          illustration_projet: imageIds.length ? ['L'].concat(imageIds) : undefined
-        }));
-        const mappedFields = grist.mapColumnNamesBack ? grist.mapColumnNamesBack(fields) : fields;
+        if (!verifiedContributor) {
+          const canPropose = await verifyProposalAccess();
+          if (!canPropose) return;
+        }
+        const projectDate = draft.date_creation_operation
+          ? Math.floor(new Date(draft.date_creation_operation + 'T12:00:00').getTime() / 1000)
+          : undefined;
+        const projectFields = cleanFields({
+          nom_operation: draft.nom_operation,
+          date_creation_operation: projectDate,
+          localisation: draft.localisation,
+          latitude: draft.latitude ? Number(draft.latitude) : undefined,
+          longitude: draft.longitude ? Number(draft.longitude) : undefined,
+          description: draft.description,
+          caracteristiques_techniques: draft.caracteristiques_techniques,
+          caractere_innovant: draft.caractere_innovant,
+          auteur: verifiedContributor && verifiedContributor.id,
+          statut_contribution: 'En cours',
+          date_soumission: new Date().toISOString()
+        });
+        const mappedFields = grist.mapColumnNamesBack ? grist.mapColumnNamesBack(projectFields) : projectFields;
+        if (!mappedFields) throw new Error('Le mapping de la table principale est incomplet.');
         await grist.selectedTable.create({ fields: mappedFields });
         sessionStorage.removeItem(STORAGE_KEY);
         draft = {};
         fileDraft = {};
-        setStatus('Proposition envoyée dans Grist. Elle peut maintenant être contrôlée puis publiée.', 'ok');
+        verifiedContributor = null;
+        setStatus('Projet enregistré avec le statut « En cours ». Un administrateur pourra maintenant le contrôler.', 'ok');
       } catch (error) {
         console.error(error);
         authLink.hidden = false;
-        setStatus("L'envoi n'a pas été accepté par Grist. Le cas le plus probable est un accès insuffisant : ouvrez l'espace connecté, authentifiez-vous, puis revenez envoyer la proposition.", 'error');
+        setStatus("L'envoi n'a pas été accepté par Grist. Vérifiez le mapping de la table principale et vos droits d’écriture, puis réessayez.", 'error');
       } finally {
         nextButton.disabled = false;
       }
@@ -1080,6 +1097,7 @@
       grist.onOptions(function(options, interaction) {
         widgetOptions = options || {};
         contributorDirectoryCache = null;
+        verifiedContributor = null;
         interactionInfo = interaction || {};
       });
     }
