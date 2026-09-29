@@ -1082,8 +1082,21 @@
           'OBSERVATOIRE_RETOURS_EXPERIENCE_COMPLET'
         ]);
         const actorTable = await resolveTargetTable(['Liste_acteurs', 'liste_acteurs', 'Liste_Acteurs']);
-        const imageIds = await uploadAttachment(fileDraft.illustration_projet);
-        const documentIds = await uploadAttachment(fileDraft.documentation_technique);
+        let imageIds = [];
+        let documentIds = [];
+        const attachmentWarnings = [];
+        try {
+          imageIds = await uploadAttachment(fileDraft.illustration_projet);
+        } catch (uploadError) {
+          console.warn("L'illustration n'a pas pu être importée ; le projet sera tout de même créé.", uploadError);
+          attachmentWarnings.push("l'illustration");
+        }
+        try {
+          documentIds = await uploadAttachment(fileDraft.documentation_technique);
+        } catch (uploadError) {
+          console.warn("Le document technique n'a pas pu être importé ; le projet sera tout de même créé.", uploadError);
+          attachmentWarnings.push('le document technique');
+        }
 
         const projectFields = {};
         assignTarget(projectFields, projectTable, ['titre'], draft.nom_operation);
@@ -1143,7 +1156,10 @@
         draft = {};
         fileDraft = {};
         verifiedContributor = null;
-        setStatus('Projet enregistré avec le statut « En cours ». Les acteurs ont été reliés au projet.', 'ok');
+        const attachmentMessage = attachmentWarnings.length
+          ? ' Pièces jointes non importées : ' + attachmentWarnings.join(' et ') + '.'
+          : '';
+        setStatus('Projet enregistré avec le statut « En cours ». Les acteurs ont été reliés au projet.' + attachmentMessage, 'ok');
       } catch (error) {
         console.error(error);
         authLink.hidden = false;
