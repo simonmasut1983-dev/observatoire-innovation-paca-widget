@@ -1028,7 +1028,7 @@
           caracteristiques_techniques: draft.caracteristiques_techniques,
           caractere_innovant: draft.caractere_innovant,
           auteur: verifiedContributor && verifiedContributor.id,
-          statut_contribution: 'En cours',
+          statut_contribution: 'en cours',
           date_soumission: new Date().toISOString()
         });
         const mappedFields = grist.mapColumnNamesBack ? grist.mapColumnNamesBack(projectFields) : projectFields;
@@ -1038,7 +1038,7 @@
         draft = {};
         fileDraft = {};
         verifiedContributor = null;
-        setStatus('Projet enregistré avec le statut « En cours ». Un administrateur pourra maintenant le contrôler.', 'ok');
+        setStatus('Projet enregistré avec le statut « en cours ». Un administrateur pourra maintenant le contrôler.', 'ok');
       } catch (error) {
         console.error(error);
         authLink.hidden = false;
