@@ -1006,6 +1006,61 @@
       return clean;
     }
 
+    async function resolveTargetTable(candidates) {
+      let lastError = null;
+      for (const tableId of candidates) {
+        try {
+          const data = await grist.docApi.fetchTable(tableId);
+          return { tableId, data };
+        } catch (error) { lastError = error; }
+      }
+      throw lastError || new Error('Table Grist introuvable : ' + candidates.join(', '));
+    }
+
+    function targetColumn(table, candidates) {
+      const keys = Object.keys(table.data || {}).filter(function(key) {
+        return Array.isArray(table.data[key]) && key !== 'id';
+      });
+      for (const candidate of candidates) {
+        const wanted = comparableColumnName(candidate);
+        const found = keys.find(function(key) { return comparableColumnName(key) === wanted; });
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function assignTarget(fields, table, candidates, value) {
+      if (value === undefined || value === null || value === '') return;
+      const column = targetColumn(table, candidates);
+      if (column) fields[column] = value;
+    }
+
+    async function addTargetRecord(tableId, fields) {
+      const results = await grist.docApi.applyUserActions([['AddRecord', tableId, null, fields]]);
+      const result = Array.isArray(results) ? results[0] : results;
+      const rowId = Number(result && result.id ? result.id : result);
+      if (!Number.isFinite(rowId)) throw new Error("Grist n'a pas renvoyé l'identifiant de la nouvelle ligne.");
+      return rowId;
+    }
+
+    function actorDraft(prefix, type) {
+      return {
+        type,
+        structure: draft[prefix + '_structure'],
+        nom: draft[prefix + '_nom'],
+        prenom: draft[prefix + '_prenom'],
+        fonction: draft[prefix + '_fonction'],
+        email: draft[prefix + '_email'],
+        telephone: draft[prefix + '_telephone']
+      };
+    }
+
+    function actorHasData(actor) {
+      return ['structure', 'nom', 'prenom', 'fonction', 'email', 'telephone'].some(function(key) {
+        return String(actor[key] || '').trim() !== '';
+      });
+    }
+
     async function submitToGrist() {
       storeInputs();
       setStatus('Préparation de l’envoi...', '');
@@ -1015,34 +1070,84 @@
           const canPropose = await verifyProposalAccess();
           if (!canPropose) return;
         }
+        if (!window.grist || !grist.docApi || typeof grist.docApi.applyUserActions !== 'function') {
+          throw new Error("L'API Grist d'écriture n'est pas disponible.");
+        }
+        const contributorId = Number(verifiedContributor && verifiedContributor.id);
+        if (!Number.isFinite(contributorId)) throw new Error("La référence de l'auteur dans ANNUAIRE est introuvable.");
+
+        const projectTable = await resolveTargetTable([
+          'observatoire_retours_experience_complet',
+          'Observatoire_retours_experience_complet',
+          'OBSERVATOIRE_RETOURS_EXPERIENCE_COMPLET'
+        ]);
+        const actorTable = await resolveTargetTable(['Liste_acteurs', 'liste_acteurs', 'Liste_Acteurs']);
+        const imageIds = await uploadAttachment(fileDraft.illustration_projet);
+        const documentIds = await uploadAttachment(fileDraft.documentation_technique);
+
+        const projectFields = {};
+        assignTarget(projectFields, projectTable, ['titre'], draft.nom_operation);
         const projectDate = draft.date_creation_operation
           ? Math.floor(new Date(draft.date_creation_operation + 'T12:00:00').getTime() / 1000)
           : undefined;
-        const projectFields = cleanFields({
-          nom_operation: draft.nom_operation,
-          date_creation_operation: projectDate,
-          localisation: draft.localisation,
-          latitude: draft.latitude ? Number(draft.latitude) : undefined,
-          longitude: draft.longitude ? Number(draft.longitude) : undefined,
-          description: draft.description,
-          caracteristiques_techniques: draft.caracteristiques_techniques,
-          caractere_innovant: draft.caractere_innovant,
-          auteur: verifiedContributor && verifiedContributor.id,
-          statut_contribution: 'en cours',
-          date_soumission: new Date().toISOString()
-        });
-        const mappedFields = grist.mapColumnNamesBack ? grist.mapColumnNamesBack(projectFields) : projectFields;
-        if (!mappedFields) throw new Error('Le mapping de la table principale est incomplet.');
-        await grist.selectedTable.create({ fields: mappedFields });
+        assignTarget(projectFields, projectTable, ['date'], projectDate);
+        assignTarget(projectFields, projectTable, ['adresse'], draft.localisation);
+        assignTarget(projectFields, projectTable, ['latitude'], draft.latitude ? Number(draft.latitude) : undefined);
+        assignTarget(projectFields, projectTable, ['longitude'], draft.longitude ? Number(draft.longitude) : undefined);
+        assignTarget(projectFields, projectTable, ['description'], draft.description);
+        assignTarget(projectFields, projectTable, ['technique'], draft.caracteristiques_techniques);
+        assignTarget(projectFields, projectTable, ['innovation'], draft.caractere_innovant);
+        assignTarget(projectFields, projectTable, ['auteur'], contributorId);
+        assignTarget(projectFields, projectTable, ['statut'], 'En cours');
+        assignTarget(projectFields, projectTable, ['Photos', 'photos'], imageIds.length ? ['L'].concat(imageIds) : undefined);
+        assignTarget(projectFields, projectTable, ['Documentation', 'documentation_technique'], documentIds.length ? ['L'].concat(documentIds) : undefined);
+
+        const projectId = await addTargetRecord(projectTable.tableId, projectFields);
+        const actors = [
+          actorDraft('moa', "Maîtrise d’ouvrage"),
+          actorDraft('moe', "Maîtrise d’œuvre"),
+          actorDraft('entreprise', 'Entreprise')
+        ].filter(actorHasData);
+
+        for (const actor of actors) {
+          const actorFields = {};
+          assignTarget(actorFields, actorTable, ['Type'], actor.type);
+          assignTarget(actorFields, actorTable, ['Structure'], actor.structure);
+          assignTarget(actorFields, actorTable, ['Nom'], actor.nom);
+          assignTarget(actorFields, actorTable, ['Prenom', 'Prénom'], actor.prenom);
+          assignTarget(actorFields, actorTable, ['Fonction'], actor.fonction);
+          assignTarget(actorFields, actorTable, ['Email', 'E-mail'], actor.email);
+          assignTarget(actorFields, actorTable, ['Telephone', 'Téléphone'], actor.telephone);
+          assignTarget(actorFields, actorTable, ['Auteur'], contributorId);
+          assignTarget(actorFields, actorTable, ['Projets', 'Projet'], ['L', projectId]);
+          await addTargetRecord(actorTable.tableId, actorFields);
+        }
+
+        if (imageIds.length) {
+          try {
+            const imageTable = await resolveTargetTable(['Images_Projet', 'images_projet_import', 'Images_projet_import']);
+            for (let index = 0; index < imageIds.length; index += 1) {
+              const imageFields = {};
+              assignTarget(imageFields, imageTable, ['Fichier', 'fichier'], ['L', imageIds[index]]);
+              assignTarget(imageFields, imageTable, ['Titre_image', 'Titre image', 'titre'], draft.nom_operation + (imageIds.length > 1 ? ' - ' + (index + 1) : ''));
+              assignTarget(imageFields, imageTable, ['Projet', 'Projets'], projectId);
+              assignTarget(imageFields, imageTable, ['Auteur'], contributorId);
+              await addTargetRecord(imageTable.tableId, imageFields);
+            }
+          } catch (imageError) {
+            console.warn('La photo reste liée au projet principal ; la table Images_Projet n’a pas pu être alimentée.', imageError);
+          }
+        }
+
         sessionStorage.removeItem(STORAGE_KEY);
         draft = {};
         fileDraft = {};
         verifiedContributor = null;
-        setStatus('Projet enregistré avec le statut « en cours ». Un administrateur pourra maintenant le contrôler.', 'ok');
+        setStatus('Projet enregistré avec le statut « En cours ». Les acteurs ont été reliés au projet.', 'ok');
       } catch (error) {
         console.error(error);
         authLink.hidden = false;
-        setStatus("L'envoi n'a pas été accepté par Grist. Vérifiez le mapping de la table principale et vos droits d’écriture, puis réessayez.", 'error');
+        setStatus("L’envoi n’a pas abouti : " + String(error && (error.message || error)) + " Vérifiez vos droits d’écriture puis réessayez.", 'error');
       } finally {
         nextButton.disabled = false;
       }
