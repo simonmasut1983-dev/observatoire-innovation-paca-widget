@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="shell">
-  <header class="obs-hero"><div class="obs-eyebrow">Observatoire de l’innovation · version v5</div><h1>Proposer un projet</h1><p>Partagez une opération innovante afin d’enrichir la cartographie et les retours d’expérience.</p></header>
+  <header class="obs-hero"><div class="obs-eyebrow">Observatoire de l’innovation · version v6</div><h1>Proposer un projet</h1><p>Partagez une opération innovante afin d’enrichir la cartographie et les retours d’expérience.</p></header>
   <div class="progress-wrap"><div class="progress-label"><span id="stepLabel">Étape 1 sur 6</span><span id="percent">17 %</span></div><div class="track"><div class="bar" id="bar"></div></div><div class="steps" id="dots"></div></div>
   <form id="projectForm" novalidate>
     <section class="page active" data-title="Informations principales">
@@ -205,32 +205,35 @@
       Fonction: (d[p + '_fonction'] || '').trim(), Email: (d[p + '_email'] || '').trim(), Telephone: (d[p + '_tel'] || '').trim()
     })).filter(a => a.Structure || a.Nom2 || a.Fonction || a.Email || a.Telephone);
   }
-  // Envoi d'un fichier par formulaire HTML classique (non soumis à CORS). La réponse du serveur n'est pas lisible :
-  // on retrouve la pièce jointe créée en comparant la table des pièces jointes avant / après.
-  async function formUpload(tok, file) {
-    try {
-      const before = new Set((await fetchT('_grist_Attachments')).id);
-      await new Promise(resolve => {
-        const name = 'obs_up_' + Math.random().toString(36).slice(2);
-        const ifr = document.createElement('iframe'); ifr.name = name; ifr.style.display = 'none';
-        const f = document.createElement('form'); f.method = 'POST'; f.enctype = 'multipart/form-data'; f.target = name; f.style.display = 'none';
-        f.action = tok.baseUrl + '/attachments?auth=' + encodeURIComponent(tok.token);
-        const inp = document.createElement('input'); inp.type = 'file'; inp.name = 'upload';
-        const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
-        f.appendChild(inp); document.body.append(ifr, f);
-        let done = false;
-        const end = () => { if (done) return; done = true; setTimeout(() => { ifr.remove(); f.remove(); }, 500); resolve(); };
-        ifr.addEventListener('load', end); setTimeout(end, 30000);
-        f.submit();
-      });
-      for (let k = 0; k < 8; k++) {
+  // Une requête bloquée par CORS peut quand même avoir été exécutée par le serveur : on compare la table des
+  // pièces jointes avant / après pour retrouver le fichier. Retourne null si cette table n'est pas lisible.
+  async function attSnapshot() { try { return new Set((await fetchT('_grist_Attachments')).id); } catch (_) { return null; } }
+  async function findNewAttachment(before, file, tries) {
+    for (let k = 0; k < tries; k++) {
+      try {
         const t = await fetchT('_grist_Attachments');
         const i = t.id.findIndex((id, n) => !before.has(id) && (!t.fileName || t.fileName[n] === file.name));
         if (i >= 0) return t.id[i];
-        await new Promise(r => setTimeout(r, 600));
-      }
-    } catch (_) {}
+      } catch (_) { return null; }
+      await new Promise(r => setTimeout(r, 600));
+    }
     return null;
+  }
+  // Envoi par formulaire HTML classique (non soumis à CORS) ; la réponse n'est pas lisible.
+  function submitForm(tok, file) {
+    return new Promise(resolve => {
+      const name = 'obs_up_' + Math.random().toString(36).slice(2);
+      const ifr = document.createElement('iframe'); ifr.name = name; ifr.style.display = 'none';
+      const f = document.createElement('form'); f.method = 'POST'; f.enctype = 'multipart/form-data'; f.target = name; f.style.display = 'none';
+      f.action = tok.baseUrl + '/attachments?auth=' + encodeURIComponent(tok.token);
+      const inp = document.createElement('input'); inp.type = 'file'; inp.name = 'upload';
+      try { const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; } catch (_) { return resolve(); }
+      f.appendChild(inp); document.body.append(ifr, f);
+      let done = false;
+      const end = () => { if (done) return; done = true; setTimeout(() => { ifr.remove(); f.remove(); }, 500); resolve(); };
+      ifr.addEventListener('load', end); setTimeout(end, 30000);
+      f.submit();
+    });
   }
   // Envoie les images comme pièces jointes Grist ; retourne {ids, failed}
   async function uploadImages(files) {
@@ -244,7 +247,9 @@
       const why = 'jeton d’accès Grist indisponible : ' + ((tokErr && tokErr.message) || 'réponse vide');
       return { ids, failed: files.map(f => f.name + ' (' + why + ')') };
     }
+    let host = ''; try { host = new URL(tok.baseUrl).host; } catch (_) {}
     for (const f of files) {
+      const before = await attSnapshot();
       try {
         const fd = new FormData(); fd.append('upload', f, f.name);
         let r = await fetch(`${tok.baseUrl}/attachments?auth=${encodeURIComponent(tok.token)}`, { method: 'POST', body: fd });
@@ -261,10 +266,12 @@
       } catch (err) {
         const m = err && err.message ? err.message : String(err);
         if (/failed to fetch|networkerror|load failed/i.test(m)) {
-          // Envoi direct bloqué (CORS) : on tente un envoi par formulaire, qui n'est pas soumis à cette règle
-          const id = await formUpload(tok, f);
+          if (!before) { failed.push(f.name + ' (réponse du serveur ' + host + ' bloquée, et table des pièces jointes illisible pour vérifier)'); continue; }
+          // la requête a peut-être été exécutée malgré la réponse bloquée
+          let id = await findNewAttachment(before, f, 3);
+          if (!id) { await submitForm(tok, f); id = await findNewAttachment(before, f, 8); }
           if (id) { ids.push({ id, name: f.name }); continue; }
-          failed.push(f.name + ' (envoi bloqué par le serveur Grist, y compris par formulaire)');
+          failed.push(f.name + ' (envoi refusé par ' + host + ' : aucune pièce jointe créée)');
         } else failed.push(f.name + ' (' + m + ')');
       }
     }
@@ -374,7 +381,7 @@
       store.del(); form.reset(); $('#fileHint').textContent = 'Images uniquement.'; show(0);
     } catch (err) {
       status.className = 'status bad';
-      status.textContent = '[v5] L’envoi n’a pas abouti : ' + (err && err.message ? err.message : err) + '. Vérifiez que le widget a l’accès complet au document et que vous avez les droits d’écriture.';
+      status.textContent = '[v6] L’envoi n’a pas abouti : ' + (err && err.message ? err.message : err) + '. Vérifiez que le widget a l’accès complet au document et que vous avez les droits d’écriture.';
     } finally { sending = false; $('#submit').disabled = false; }
   });
 })();
