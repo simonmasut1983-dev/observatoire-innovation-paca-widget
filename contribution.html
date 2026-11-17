@@ -9,7 +9,7 @@
 </head>
 <body>
 <main class="shell">
-  <header class="obs-hero"><div class="obs-eyebrow">Observatoire de l’innovation · version v7</div><h1>Proposer un projet</h1><p>Partagez une opération innovante afin d’enrichir la cartographie et les retours d’expérience.</p></header>
+  <header class="obs-hero"><div class="obs-eyebrow">Observatoire de l’innovation · version v8</div><h1>Proposer un projet</h1><p>Partagez une opération innovante afin d’enrichir la cartographie et les retours d’expérience.</p></header>
   <div class="progress-wrap"><div class="progress-label"><span id="stepLabel">Étape 1 sur 6</span><span id="percent">17 %</span></div><div class="track"><div class="bar" id="bar"></div></div><div class="steps" id="dots"></div></div>
   <form id="projectForm" novalidate>
     <section class="page active" data-title="Informations principales">
@@ -43,7 +43,7 @@
     </section>
     <section class="page" data-title="Illustrations">
       <div class="kicker">Étape 6</div><h2>Illustrations</h2><p class="intro">Ajoutez, si vous le souhaitez, des photos, plans ou schémas du projet.</p>
-      <div class="grid"><div class="field full filebox"><label for="imageFiles">Illustrations du projet</label><input id="imageFiles" type="file" multiple accept="image/*"><p class="small" id="fileHint">Images uniquement. Si l’envoi de fichiers est refusé, utilisez plutôt un lien ci-dessous.</p></div>
+      <div class="grid"><div class="field full filebox"><label for="imageFiles">Illustrations du projet</label><input id="imageFiles" type="file" multiple accept="image/*"><p class="small" id="fileHint">Images uniquement (5 au maximum, réduites automatiquement avant l’envoi).</p></div>
         <div class="field full"><label for="imageUrl">Ou lien vers une illustration (adresse web)</label><input id="imageUrl" name="imageUrl" type="url" placeholder="https://…"></div>
         <div class="field full"><label for="imageCaption">Légende / crédit de l’illustration</label><input id="imageCaption" name="imageCaption"></div></div>
       <p class="small" style="margin-top:16px">Les illustrations sont envoyées avec le projet et ne seront publiées qu’après validation.</p>
@@ -58,7 +58,7 @@
   // ---- Réglages ----
   const STATUT_CODE = 'proposition';          // ligne de la table DROITS utilisée comme statut d'un projet proposé
   const T_PROJETS = 'Observatoire_retours_experience_complet';
-  const MAX_IMAGES = 10, MAX_MB = 8;          // limites des illustrations
+  const MAX_IMAGES = 5, MAX_MB = 20, MAX_DATA_URL = 400000;          // limites des illustrations
   const identifiantComplet = n => n + '_RetourDexperience';  // même format que les projets existants (ex. 87349133_RetourDexperience)
 
   const form = document.querySelector('#projectForm');
@@ -207,35 +207,20 @@
       Fonction: (d[p + '_fonction'] || '').trim(), Email: (d[p + '_email'] || '').trim(), Telephone: (d[p + '_tel'] || '').trim()
     })).filter(a => a.Structure || a.Nom2 || a.Fonction || a.Email || a.Telephone);
   }
-  // Envoie les images comme pièces jointes Grist ; retourne {ids, failed}. Une seule tentative par fichier, avec délai limité.
-  async function uploadImages(files) {
-    const ids = [], failed = [];
-    let tok = null, tokErr = null;
-    try {
-      if (!grist.docApi.getAccessToken) throw new Error('getAccessToken indisponible dans ce widget');
-      tok = await grist.docApi.getAccessToken({ readOnly: false });
-    } catch (err) { tokErr = err; }
-    if (!tok || !tok.baseUrl || !tok.token) {
-      return { ids, failed: files.map(f => f.name + ' (jeton d’accès Grist indisponible : ' + ((tokErr && tokErr.message) || 'réponse vide') + ')') };
-    }
-    let blocked = false;
-    for (const f of files) {
-      if (blocked) { failed.push(f.name + ' (envoi bloqué par le serveur)'); continue; }
-      const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 15000);
-      try {
-        const fd = new FormData(); fd.append('upload', f, f.name);
-        const r = await fetch(tok.baseUrl + '/attachments?auth=' + encodeURIComponent(tok.token), { method: 'POST', body: fd, signal: ctl.signal });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const j = await r.json();
-        if (!Array.isArray(j) || !j.length) throw new Error('réponse inattendue de Grist');
-        ids.push({ id: j[0], name: f.name });
-      } catch (err) {
-        const m = err && err.message ? err.message : String(err);
-        if (/failed to fetch|networkerror|load failed|abort/i.test(m)) { blocked = true; failed.push(f.name + ' (envoi bloqué par le serveur Grist)'); }
-        else failed.push(f.name + ' (' + m + ')');
-      } finally { clearTimeout(to); }
-    }
-    return { ids, failed };
+  // Réduit une image (1 280 px max, JPEG) et la retourne sous forme d'adresse data: enregistrable dans une cellule de texte.
+  // Le serveur Grist refuse l'envoi de fichiers depuis la page (erreur 401), on n'utilise donc pas les pièces jointes.
+  async function compressImage(file) {
+    let bmp;
+    try { bmp = await createImageBitmap(file); } catch (_) { throw new Error('image illisible ou format non pris en charge'); }
+    const ratio = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(bmp.width * ratio)); c.height = Math.max(1, Math.round(bmp.height * ratio));
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    let q = 0.78, out = c.toDataURL('image/jpeg', q);
+    while (out.length > MAX_DATA_URL && q > 0.4) { q -= 0.1; out = c.toDataURL('image/jpeg', q); }
+    if (out.length > MAX_DATA_URL) throw new Error('image trop lourde, même réduite');
+    return out;
   }
 
   // ---- Envoi ----
@@ -307,12 +292,16 @@
       if (all.length > files.length) warnings.push(`${all.length - files.length} image(s) ignorée(s) (trop nombreuses ou trop lourdes)`);
       if (files.length) {
         setMsg('Envoi des illustrations…');
-        const up = await uploadImages(files);
-        if (up.ids.length) {
-          await addRows('Images_projet_import', up.ids.map((u, i) =>
-            ({ Projet: projId, Titre_image: u.name, Ordre: i + 1, Image_principale: i === 0, Publier: false, Fichier: ['L', u.id] })));
+        const prepared = [], failed = [];
+        for (const f of files) {
+          try { prepared.push({ name: f.name, url: await compressImage(f) }); }
+          catch (err) { failed.push(f.name + ' (' + (err && err.message ? err.message : err) + ')'); }
         }
-        if (up.failed.length) warnings.push('illustration(s) non envoyée(s) : ' + up.failed.join(', '));
+        if (prepared.length) {
+          await addRows('Images_projet_import', prepared.map((p, i) =>
+            ({ Projet: projId, Titre_image: p.name.replace(/\.[^.]+$/, ''), Legende: (d.imageCaption || '').trim(), Source_URL: p.url, Ordre: i + 1, Image_principale: i === 0, Publier: false })));
+        }
+        if (failed.length) warnings.push('illustration(s) non enregistrée(s) : ' + failed.join(', '));
       }
     } catch (err) { warnings.push('les illustrations n’ont pas pu être envoyées (' + (err.message || err) + ')'); }
 
@@ -350,7 +339,7 @@
       store.del(); form.reset(); $('#fileHint').textContent = 'Images uniquement.'; show(0);
     } catch (err) {
       status.className = 'status bad';
-      status.textContent = '[v7] L’envoi n’a pas abouti : ' + (err && err.message ? err.message : err) + '. Vérifiez que le widget a l’accès complet au document et que vous avez les droits d’écriture.';
+      status.textContent = '[v8] L’envoi n’a pas abouti : ' + (err && err.message ? err.message : err) + '. Vérifiez que le widget a l’accès complet au document et que vous avez les droits d’écriture.';
     } finally { sending = false; $('#submit').disabled = false; }
   });
 })();
