@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Proposer un projet</title>
   <style>.shell{--ink:#18324a;--muted:#617285;--blue:#075f82;--teal:#08a6a6;--pale:#eef7f8;--line:#d8e4e8;--danger:#b42318;--white:#fff}.shell, .shell *{box-sizing:border-box}.shell{color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}.shell{max-width:980px;margin:auto;padding:28px 18px 48px}.shell .obs-hero{background:linear-gradient(130deg,#064e70,#087b8e 62%,#08a6a6);color:white;border-radius:22px;padding:28px 30px;box-shadow:0 18px 45px #0a5d7826}.shell .obs-eyebrow{font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px;opacity:.82}.shell .obs-hero h1{margin:8px 0 6px;font-size:clamp(25px,4vw,38px);line-height:1.1}.shell .obs-hero p{margin:0;max-width:720px;opacity:.9}.shell .progress-wrap{margin:22px 0 18px}.shell .progress-label{display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-bottom:8px}.shell .track{height:8px;background:#dce9ec;border-radius:99px;overflow:hidden}.shell .bar{height:100%;width:16.666%;background:linear-gradient(90deg,var(--teal),#67d3c9);transition:width .25s}.shell .steps{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}.shell .dot{height:5px;background:#d7e3e6;border-radius:9px}.shell .dot.on{background:var(--teal)}.shell form{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 12px 32px #17364b12}.shell .page{display:none}.shell .page.active{display:block}.shell .kicker{color:var(--teal);font-weight:800;font-size:13px}.shell .page h2{margin:5px 0 6px;font-size:26px}.shell .intro{margin:0 0 22px;color:var(--muted)}.shell .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.shell .full{grid-column:1/-1}.shell .field{display:flex;flex-direction:column;gap:7px}.shell label{font-weight:750}.shell .req{color:var(--danger)}.shell input,.shell textarea{width:100%;border:1px solid #b9cbd2;border-radius:11px;padding:12px 13px;font:inherit;color:var(--ink);background:white;outline:none;transition:.16s}.shell input:focus,.shell textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px #08a6a622}.shell textarea{min-height:130px;resize:vertical}.shell .small{font-size:12.5px;color:var(--muted);margin:0}.shell .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase}.shell .or:before,.shell .or:after{content:"";height:1px;background:var(--line);flex:1}.shell .panel{border:1px solid var(--line);border-radius:15px;padding:18px;background:#fbfdfe}.shell .error{display:none;color:var(--danger);background:#fff2f0;border:1px solid #f7c3bd;border-radius:10px;padding:10px 12px;margin:14px 0 0}.shell .error.show{display:block}.shell .filebox{border:1.5px dashed #8db1bc;border-radius:14px;padding:18px;background:var(--pale)}.shell .actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}.shell .group{display:flex;gap:10px}.shell .btn{border:0;border-radius:11px;padding:11px 16px;font-weight:800;cursor:pointer}.shell .primary{background:var(--blue);color:white}.shell .primary:hover{background:#054d69}.shell .secondary{background:#e8f1f3;color:var(--ink)}.shell .ghost{background:transparent;color:var(--muted)}.shell button:disabled{opacity:.45;cursor:not-allowed}.shell .status{margin-top:14px;padding:12px 14px;border-radius:11px;display:none}.shell .status.ok{display:block;background:#eaf8f2;color:#06714d}.shell .status.bad{display:block;background:#fff2f0;color:var(--danger)}.shell .status.info{display:block;background:#eef7f8;color:var(--ink)}@media(max-width:680px){.shell{padding:12px}.shell .obs-hero,.shell form{border-radius:16px;padding:20px}.shell .grid{grid-template-columns:1fr}.shell .full{grid-column:auto}.shell .actions{align-items:stretch;flex-direction:column}.shell .group{justify-content:space-between}.shell .steps{gap:4px}}
-  </style>
+  .shell .addr-list{position:absolute;left:0;right:0;top:100%;z-index:20;margin:4px 0 0;padding:4px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 28px #17364b22;max-height:260px;overflow:auto}.shell .addr-list[hidden]{display:none}.shell .addr-list li{padding:9px 11px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}.shell .addr-list li:hover,.shell .addr-list li[aria-selected=true]{background:var(--pale)}.shell .addr-kind{color:var(--muted);font-size:12px;white-space:nowrap}.shell .geo-ok{color:#06714d}.shell .geo-warn{color:var(--danger)}</style>
 </head>
 <body>
 <main class="shell">
-  <header class="obs-hero"><div class="obs-eyebrow">Observatoire de l’innovation · version v8</div><h1>Proposer un projet</h1><p>Partagez une opération innovante afin d’enrichir la cartographie et les retours d’expérience.</p></header>
+  <header class="obs-hero"><div class="obs-eyebrow">Observatoire de l’innovation · version v9</div><h1>Proposer un projet</h1><p>Partagez une opération innovante afin d’enrichir la cartographie et les retours d’expérience.</p></header>
   <div class="progress-wrap"><div class="progress-label"><span id="stepLabel">Étape 1 sur 6</span><span id="percent">17 %</span></div><div class="track"><div class="bar" id="bar"></div></div><div class="steps" id="dots"></div></div>
   <form id="projectForm" novalidate>
     <section class="page active" data-title="Informations principales">
@@ -17,8 +17,8 @@
       <div class="grid">
         <div class="field full"><label for="title">Nom de l’opération <span class="req">*</span></label><input id="title" name="title" required autocomplete="off"></div>
         <div class="field"><label for="date">Date de création de l’opération <span class="req">*</span></label><input id="date" name="date" type="date" required></div>
-        <div class="field full panel"><label>Localisation du projet <span class="req">*</span></label><p class="small">Renseignez une adresse ou les deux coordonnées géographiques (latitude et longitude). L’un de ces deux modes de localisation est requis.</p>
-          <div class="field" style="margin-top:14px"><label for="address">Adresse</label><input id="address" name="address" autocomplete="street-address" placeholder="Numéro, voie, commune, code postal"></div>
+        <div class="field full panel"><label>Localisation du projet <span class="req">*</span></label><p class="small">Commencez à saisir une adresse, une commune ou un code postal : des suggestions apparaissent et la position (latitude et longitude) est renseignée automatiquement quand vous en choisissez une. Vous pouvez aussi saisir directement les coordonnées.</p>
+          <div class="field" style="margin-top:14px;position:relative"><label for="address">Adresse, commune ou code postal</label><input id="address" name="address" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addrList" placeholder="Numéro, voie, commune ou code postal"><ul id="addrList" class="addr-list" role="listbox" hidden></ul><p class="small" id="geoStatus" aria-live="polite"></p></div>
           <div class="or" style="margin:16px 0">ou</div>
           <div class="grid"><div class="field"><label for="lat">Latitude</label><input id="lat" name="lat" inputmode="decimal" placeholder="ex. 48.8566"></div><div class="field"><label for="lon">Longitude</label><input id="lon" name="lon" inputmode="decimal" placeholder="ex. 2.3522"></div></div>
           <div class="error" id="locationError">Indiquez une adresse, ou renseignez à la fois la latitude et la longitude (nombres valides).</div>
@@ -56,7 +56,7 @@
 <script>
 (() => {
   // ---- Réglages ----
-  const STATUT_CODE = 'proposition';          // ligne de la table DROITS utilisée comme statut d'un projet proposé
+  const STATUT_VALIDATION = 'en cours';       // valeur de la colonne Validation (table DROITS) donnée aux projets proposés : masqués sur la carte jusqu'au passage à « OK »
   const T_PROJETS = 'Observatoire_retours_experience_complet';
   const MAX_IMAGES = 5, MAX_MB = 20, MAX_DATA_URL = 400000;          // limites des illustrations
   const identifiantComplet = n => n + '_RetourDexperience';  // même format que les projets existants (ex. 87349133_RetourDexperience)
@@ -164,8 +164,8 @@
   }
   async function getStatutId() {
     const t = await fetchT('DROITS');
-    const i = (t.Code || []).findIndex(c => norm(c) === norm(STATUT_CODE));
-    if (i < 0) throw new Error(`la ligne « ${STATUT_CODE} » est introuvable dans la table DROITS`);
+    const i = (t.Validation || []).findIndex(v => norm(v) === norm(STATUT_VALIDATION));
+    if (i < 0) throw new Error(`aucune ligne de la table DROITS n'a « ${STATUT_VALIDATION} » dans la colonne Validation`);
     return t.id[i];
   }
   async function nextIdentifiant() {
@@ -186,18 +186,6 @@
       missing.forEach((r, k) => map[r] = newIds[k]);
     }
     return map;
-  }
-  // Géocodage de l'adresse via l'API Adresse (base adresse nationale), si aucune coordonnée n'est fournie
-  async function geocode(addr) {
-    try {
-      const c = new AbortController(); const to = setTimeout(() => c.abort(), 6000);
-      const r = await fetch('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(addr), { signal: c.signal });
-      clearTimeout(to);
-      if (!r.ok) return null;
-      const j = await r.json(); const f = j.features && j.features[0];
-      if (!f || (f.properties.score || 0) < 0.5) return null;
-      return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] };
-    } catch (_) { return null; }
   }
   function getActors(d) {
     const defs = [['Maîtrise d’ouvrage', 'moa'], ['Maîtrise d’œuvre', 'moe'], ['Entreprise', 'ent']];
@@ -235,7 +223,7 @@
     let lat = num(d.lat), lon = num(d.lon);
     if (!coordsOK(lat, lon)) {
       lat = lon = null;
-      const g = d.address ? await geocode(d.address) : null;
+      const g = d.address ? await geocodeBest(d.address) : null;
       if (g) { lat = g.lat; lon = g.lon; }
       else warnings.push('l’adresse n’a pas pu être localisée automatiquement (le projet n’apparaîtra pas sur la carte tant que la position n’est pas renseignée)');
     }
@@ -317,12 +305,145 @@
     return warnings;
   }
 
+  // ---- Recherche d'adresse : Géoplateforme de l'IGN (data.geopf.fr), gratuite et sans clé ----
+  // L'ancienne API Adresse (api-adresse.data.gouv.fr) est abandonnée. Suggestions pendant la saisie : service
+  // « completion » ; localisation d'une adresse saisie sans choix : service « search ».
+  const GEO = 'https://data.geopf.fr/geocodage';
+  const KIND_LABEL = { housenumber: 'Adresse', street: 'Rue', locality: 'Lieu-dit', municipality: 'Commune', StreetAddress: 'Adresse', PositionOfInterest: 'Lieu' };
+  const addrInput = $('#address'), addrList = $('#addrList'), geoStatus = $('#geoStatus');
+  let autoFilled = false, ambiguityShown = false, suggestToken = 0, suggestTimer = null, activeIdx = -1, shown = [];
+
+  async function fetchJson(url, ms) {
+    const c = new AbortController(); const to = setTimeout(() => c.abort(), ms || 6000);
+    try { const r = await fetch(url, { signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
+    finally { clearTimeout(to); }
+  }
+  async function firstOk(urls) {
+    let lastErr = null;
+    for (const u of urls) { try { return await fetchJson(u); } catch (err) { lastErr = err; } }
+    throw lastErr || new Error('service injoignable');
+  }
+  // Accepte les deux formes de réponse (suggestions {results:[{fulltext,x,y}]} ou GeoJSON {features:[…]})
+  function normalizeSuggestions(j) {
+    const arr = Array.isArray(j && j.results) ? j.results : Array.isArray(j && j.features) ? j.features : [];
+    const out = [];
+    for (const s of arr) {
+      if (!s) continue;
+      if (s.geometry) {
+        const p = s.properties || {}, c = s.geometry.coordinates || [];
+        out.push({ label: p.label || p.name || '', lon: Number(c[0]), lat: Number(c[1]), kind: p.type || '', score: Number(p.score) });
+      } else {
+        out.push({ label: s.fulltext || s.label || [s.street, s.zipcode, s.city].filter(Boolean).join(' '), lon: Number(s.x), lat: Number(s.y), kind: s.kind || s.country || '', score: NaN });
+      }
+    }
+    return out.filter(s => s.label);
+  }
+  const suggest = q => { const e = encodeURIComponent(q); return firstOk([
+    GEO + '/completion?text=' + e + '&type=StreetAddress,PositionOfInterest&maximumResponses=6',
+    GEO + '/completion?text=' + e + '&type=StreetAddress&maximumResponses=6',
+    GEO + '/search?q=' + e + '&limit=6',
+    GEO + '/search/?q=' + e + '&limit=6']).then(normalizeSuggestions); };
+  const candidates = q => { const e = encodeURIComponent(q); return firstOk([
+    GEO + '/search?q=' + e + '&limit=3',
+    GEO + '/search/?q=' + e + '&limit=3']).then(normalizeSuggestions); };
+  async function geocodeBest(addr) {
+    try {
+      const c = (await candidates(addr)).filter(s => coordsOK(s.lat, s.lon)), t = c[0];
+      if (!t || (Number.isFinite(t.score) && t.score < 0.5)) return null;
+      return { lat: t.lat, lon: t.lon };
+    } catch (_) { return null; }
+  }
+
+  function setGeo(msg, kind) { geoStatus.className = 'small' + (kind === 'ok' ? ' geo-ok' : kind === 'warn' ? ' geo-warn' : ''); geoStatus.textContent = msg || ''; }
+  function setCoords(lat, lon) {
+    $('#lat').value = lat.toFixed(6); $('#lon').value = lon.toFixed(6); autoFilled = true;
+    setGeo('Position trouvée automatiquement (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + '). Vous pouvez la corriger si besoin.', 'ok');
+  }
+  function resetGeo() { autoFilled = false; ambiguityShown = false; setGeo('', ''); hideList(); }
+  function hideList() { addrList.hidden = true; addrList.innerHTML = ''; addrInput.setAttribute('aria-expanded', 'false'); activeIdx = -1; shown = []; }
+  function renderList(items) {
+    shown = items; activeIdx = -1; addrList.innerHTML = '';
+    if (!items.length) { hideList(); return; }
+    items.forEach((s, i) => {
+      const li = document.createElement('li'); li.setAttribute('role', 'option'); li.id = 'addr-opt-' + i;
+      const a = document.createElement('span'); a.textContent = s.label;
+      const b = document.createElement('span'); b.className = 'addr-kind'; b.textContent = KIND_LABEL[s.kind] || '';
+      li.append(a, b);
+      li.addEventListener('mousedown', e => { e.preventDefault(); choose(s); });
+      addrList.appendChild(li);
+    });
+    addrList.hidden = false; addrInput.setAttribute('aria-expanded', 'true');
+  }
+  function highlight(i) {
+    const lis = [...addrList.children]; if (!lis.length) return;
+    activeIdx = (i + lis.length) % lis.length;
+    lis.forEach((li, n) => li.setAttribute('aria-selected', String(n === activeIdx)));
+    addrInput.setAttribute('aria-activedescendant', lis[activeIdx].id);
+  }
+  async function choose(s) {
+    addrInput.value = s.label; hideList(); ambiguityShown = false;
+    let lat = s.lat, lon = s.lon;
+    if (!coordsOK(lat, lon)) { try { const c = (await candidates(s.label))[0]; if (c) { lat = c.lat; lon = c.lon; } } catch (_) {} }
+    if (coordsOK(lat, lon)) setCoords(lat, lon);
+    else { $('#lat').value = ''; $('#lon').value = ''; autoFilled = false; setGeo('Position introuvable pour cette adresse : saisissez la latitude et la longitude.', 'warn'); }
+    save();
+  }
+  // Avant de quitter l'étape 1 : si seule l'adresse est saisie, on cherche sa position ; si plusieurs adresses
+  // correspondent, on propose le choix (un second clic sur « Suivant » permet de continuer sans position).
+  async function settleLocation() {
+    if (coordsOK(num($('#lat').value), num($('#lon').value))) return true;
+    const q = addrInput.value.trim(); if (!q) return true;
+    $('#next').disabled = true;
+    try {
+      const c = (await candidates(q)).filter(s => coordsOK(s.lat, s.lon));
+      if (!c.length) { setGeo('Adresse non localisée automatiquement. Choisissez une suggestion, saisissez latitude et longitude, ou continuez : le projet ne s’affichera sur la carte qu’une fois la position renseignée.', 'warn'); return true; }
+      const top = c[0], second = c[1];
+      if (c.length === 1 || (top.score >= 0.7 && !(second && second.score > top.score - 0.1))) { setCoords(top.lat, top.lon); save(); return true; }
+      if (ambiguityShown) return true;
+      ambiguityShown = true; renderList(c);
+      setGeo('Plusieurs adresses correspondent : choisissez la bonne dans la liste (ou cliquez de nouveau sur « Suivant » pour continuer sans position).', 'warn');
+      return false;
+    } catch (_) {
+      setGeo('La recherche d’adresse est momentanément indisponible : saisissez latitude et longitude, ou continuez avec l’adresse seule.', 'warn');
+      return true;
+    } finally { $('#next').disabled = false; }
+  }
+  addrInput.addEventListener('input', () => {
+    if (autoFilled) { $('#lat').value = ''; $('#lon').value = ''; autoFilled = false; setGeo('', ''); }
+    ambiguityShown = false;
+    clearTimeout(suggestTimer);
+    const q = addrInput.value.trim();
+    if (q.length < 3) { hideList(); return; }
+    const tok = ++suggestToken;
+    suggestTimer = setTimeout(async () => {
+      try {
+        const items = await suggest(q);
+        if (tok !== suggestToken) return;
+        renderList(items);
+        if (!items.length) setGeo('Aucune adresse trouvée : précisez la saisie ou renseignez latitude et longitude.', 'warn');
+        else if (geoStatus.classList.contains('geo-warn')) setGeo('', '');
+      } catch (_) {
+        if (tok === suggestToken) { hideList(); setGeo('La recherche d’adresse est momentanément indisponible : saisissez latitude et longitude, ou continuez avec l’adresse seule.', 'warn'); }
+      }
+    }, 280);
+  });
+  addrInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') e.preventDefault();
+    if (addrList.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); highlight(activeIdx + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(activeIdx - 1); }
+    else if (e.key === 'Enter' && activeIdx >= 0) choose(shown[activeIdx]);
+    else if (e.key === 'Escape') hideList();
+  });
+  addrInput.addEventListener('blur', () => setTimeout(hideList, 150));
+  ['#lat', '#lon'].forEach(s => $(s).addEventListener('input', () => { autoFilled = false; }));
+
   // ---- Événements ----
   fields.forEach(f => f.addEventListener('input', save));
   restore(); show(0);
-  $('#next').addEventListener('click', () => { if (validPage()) show(step + 1); });
+  $('#next').addEventListener('click', async () => { if (!validPage()) return; if (step === 0 && !(await settleLocation())) return; show(step + 1); });
   $('#prev').addEventListener('click', () => show(step - 1));
-  $('#clear').addEventListener('click', () => { if (confirm('Effacer toutes les informations du brouillon ?')) { form.reset(); store.del(); $('#fileHint').textContent = 'Images uniquement.'; show(0); } });
+  $('#clear').addEventListener('click', () => { if (confirm('Effacer toutes les informations du brouillon ?')) { form.reset(); store.del(); resetGeo(); $('#fileHint').textContent = 'Images uniquement.'; show(0); } });
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -336,10 +457,10 @@
       const warnings = await send(d, setMsg);
       status.className = 'status ok';
       status.textContent = 'Votre projet a bien été transmis pour validation.' + (warnings.length ? ' À noter : ' + warnings.join(' ; ') + '.' : '');
-      store.del(); form.reset(); $('#fileHint').textContent = 'Images uniquement.'; show(0);
+      store.del(); form.reset(); resetGeo(); $('#fileHint').textContent = 'Images uniquement.'; show(0);
     } catch (err) {
       status.className = 'status bad';
-      status.textContent = '[v8] L’envoi n’a pas abouti : ' + (err && err.message ? err.message : err) + '. Vérifiez que le widget a l’accès complet au document et que vous avez les droits d’écriture.';
+      status.textContent = '[v9] L’envoi n’a pas abouti : ' + (err && err.message ? err.message : err) + '. Vérifiez que le widget a l’accès complet au document et que vous avez les droits d’écriture.';
     } finally { sending = false; $('#submit').disabled = false; }
   });
 })();
